@@ -1,0 +1,14 @@
+rootProject.name = 'picto'
+
+include 'bencode'
+
+include 'protocol'
+
+
+
+include 'bencode-util'
+
+include 'http-util'
+
+include 'picto-util'
+
