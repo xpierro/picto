@@ -11,9 +11,11 @@ import com.github.picto.metainfo.model.MetaInfo;
 import com.github.picto.network.http.GetExecutor;
 import com.github.picto.thp.exception.THPRequestException;
 import com.github.picto.thp.model.ThpAnnounceEvent;
+import com.github.picto.thp.model.TrackerAnnounceResponseModel;
 import com.github.picto.thp.model.peerid.StaticPeerId;
 import com.github.picto.thp.request.AnnounceGet;
 import com.github.picto.util.exception.HashException;
+import junit.framework.Assert;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -121,13 +123,21 @@ public class AnnounceGetTest {
             public Void apply(Void aVoid) {
                 BEncodeReader bEncodeReader = new BEncodeReader(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
                 BEncodeableType type = null;
+                TrackerAnnounceResponseModel responseModel = null;
                 try {
                     type = bEncodeReader.readBencodable();
+                    responseModel = new BEncodeUnserializer<>((BEncodeableDictionary) type, TrackerAnnounceResponseModel.class).unserialize();
                 } catch (CannotReadBencodedException e) {
                     e.printStackTrace();
                 } catch (CannotReadTokenException e) {
                     e.printStackTrace();
+                } catch (CannotUnserializeException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+
+                Assert.assertNotNull(responseModel);
                 shouldEnd.set(true);
                 return null;
             }

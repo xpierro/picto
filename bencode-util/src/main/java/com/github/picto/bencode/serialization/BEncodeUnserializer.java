@@ -41,6 +41,10 @@ public class BEncodeUnserializer<T> {
         if (!targetClass.isAnnotationPresent(BEncodeDictionary.class)) {
             throw new CannotUnserializeException("The target class is not a dictionary.");
         }
+        // We chack that the class implements the BEncodedDictionary interface
+        if (!BEncodedDictionary.class.isAssignableFrom(targetClass)) {
+            throw new CannotUnserializeException("The target class must implements BEncodedDictionary.");
+        }
         this.targetClass = targetClass;
         this.root = dictionary;
     }
@@ -88,7 +92,7 @@ public class BEncodeUnserializer<T> {
             Optional<BEncodeableType> valueEncoded = root.get(name);
             if (valueEncoded.isPresent()) {
                 BEncodeableInteger bEncodeableInteger = (BEncodeableInteger) valueEncoded.get();
-                if (returnType.equals(int.class)) {
+                if (returnType.equals(int.class) || returnType.equals(Integer.class)) {
                     setter.invoke(target, bEncodeableInteger.getInteger());
                 }
                 //TODO: error check, other types
