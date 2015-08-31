@@ -5,6 +5,13 @@ import com.github.picto.bencode.annotation.BEncodeByteArray;
 import com.github.picto.bencode.annotation.BEncodeDictionary;
 import com.github.picto.bencode.annotation.BEncodeInteger;
 import com.github.picto.bencode.type.BEncodeableDictionary;
+import com.github.picto.php.model.Peer;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Represents a tracker response.
@@ -137,6 +144,39 @@ public class TrackerAnnounceResponseModel implements BEncodedDictionary {
 
     public void setBinaryPeers(byte[] binaryPeers) {
         this.binaryPeers = binaryPeers;
+    }
+
+    /**
+     * Get the list of peers on the network sent by the server.
+     * @return A list of simple peer objects.
+     */
+    public List<Peer> getPeers() {
+        List<Peer> peers = new ArrayList<>();
+        if (binaryPeers != null && binaryPeers.length > 0) {
+            if (binaryPeers.length % 6 != 0) {
+                throw new IllegalStateException("Peers should be represented by groups of 6 bytes");
+            }
+            for (int i = 0; i < binaryPeers.length; i+= 6) {
+                byte[] ipBytes = Arrays.copyOfRange(binaryPeers, i, i + 4);
+                byte[] portBytes = Arrays.copyOfRange(binaryPeers, i + 4, i + 6);
+
+                int port = 0;
+                port |= portBytes[0] & 0xFF;
+                port <<= 8;
+                port |= portBytes[1] & 0xFF;
+
+                Peer peer = new Peer();
+                try {
+                    peer.setHost(InetAddress.getByAddress(ipBytes));
+                    peer.setPort(port);
+                    peers.add(peer);
+                } catch (UnknownHostException e) {
+                    //TODO: shouldnt fail too hard on this.
+                    throw new IllegalStateException("The peer ip address is invalid");
+                }
+            }
+        }
+        return peers;
     }
 
     @Override
