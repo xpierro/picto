@@ -1,12 +1,19 @@
 apply plugin: 'java'
 
-sourceCompatibility = 1.5
+sourceCompatibility = 1.8
 version = '1.0'
 
 repositories {
     mavenCentral()
+    maven {
+        url 'https://oss.jfrog.org/libs-snapshot'
+    }
 }
 
 dependencies {
+    project(':picto-util')
+    compile group: 'com.jcraft', name: 'jzlib', version:'1.1.2'
+    compile group: 'io.netty', name: 'netty-all', version: '4.1.0.Beta5'
+    compile group: 'io.reactivex', name: 'rxnetty', version: '0.5.0-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }

@@ -17,16 +17,20 @@ package com.github.picto.network.exemple;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.codec.http.HttpObject;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HttpSnoopClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
-    @Override
+    private AtomicBoolean shouldEnd;
+
+    public HttpSnoopClientHandler(AtomicBoolean shouldEnd) {
+        super();
+        this.shouldEnd = shouldEnd;
+    }
+
     public void messageReceived(ChannelHandlerContext ctx, HttpObject msg) {
         if (msg instanceof HttpResponse) {
             HttpResponse response = (HttpResponse) msg;
@@ -44,7 +48,7 @@ public class HttpSnoopClientHandler extends SimpleChannelInboundHandler<HttpObje
                 System.err.println();
             }
 
-            if (HttpUtil.isTransferEncodingChunked(response)) {
+            if (HttpHeaderUtil.isTransferEncodingChunked(response)) {
                 System.err.println("CHUNKED CONTENT {");
             } else {
                 System.err.println("CONTENT {");
@@ -59,6 +63,7 @@ public class HttpSnoopClientHandler extends SimpleChannelInboundHandler<HttpObje
             if (content instanceof LastHttpContent) {
                 System.err.println("} END OF CONTENT");
                 ctx.close();
+                shouldEnd.set(true);
             }
         }
     }
@@ -67,5 +72,10 @@ public class HttpSnoopClientHandler extends SimpleChannelInboundHandler<HttpObje
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
+        messageReceived(ctx, msg);
     }
 }

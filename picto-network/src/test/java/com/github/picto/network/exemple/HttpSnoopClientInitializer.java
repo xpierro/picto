@@ -22,12 +22,17 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.ssl.SslContext;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class HttpSnoopClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final SslContext sslCtx;
 
-    public HttpSnoopClientInitializer(SslContext sslCtx) {
+    private final AtomicBoolean shouldEnd;
+
+    public HttpSnoopClientInitializer(SslContext sslCtx, AtomicBoolean shouldEnd) {
         this.sslCtx = sslCtx;
+        this.shouldEnd = shouldEnd;
     }
 
     @Override
@@ -47,6 +52,6 @@ public class HttpSnoopClientInitializer extends ChannelInitializer<SocketChannel
         // Uncomment the following line if you don't want to handle HttpContents.
         //p.addLast(new HttpObjectAggregator(1048576));
 
-        p.addLast(new HttpSnoopClientHandler());
+        p.addLast(new HttpSnoopClientHandler(shouldEnd));
     }
 }

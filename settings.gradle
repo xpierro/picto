@@ -12,3 +12,5 @@ include 'http-util'
 
 include 'picto-util'
 
+include 'picto-network'
+
