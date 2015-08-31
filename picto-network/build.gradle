@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    project(':picto-util')
+    compile project(':picto-util')
     compile group: 'com.jcraft', name: 'jzlib', version:'1.1.2'
     compile group: 'io.netty', name: 'netty-all', version: '4.1.0.Beta5'
     compile group: 'io.reactivex', name: 'rxnetty', version: '0.5.0-SNAPSHOT'

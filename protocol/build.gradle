@@ -5,6 +5,9 @@ version = '1.0'
 
 repositories {
     mavenCentral()
+    maven {
+        url 'https://oss.jfrog.org/libs-snapshot'
+    }
 }
 
 dependencies {
@@ -13,6 +16,7 @@ dependencies {
     compile project(':bencode-util')
     compile project(':http-util')
     compile project(':picto-util')
+    compile project(':picto-network')
     testCompile group: 'junit', name: 'junit', version: '4.11'
 
 }
