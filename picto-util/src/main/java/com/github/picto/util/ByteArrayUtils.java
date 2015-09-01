@@ -24,4 +24,10 @@ public class ByteArrayUtils {
         }
         return new String(hexChars);
     }
+
+    public static void fillWithZeroes(final byte[] bytes) {
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = 0x00;
+        }
+    }
 }

@@ -5,7 +5,7 @@ import com.github.picto.bencode.annotation.BEncodeByteArray;
 import com.github.picto.bencode.annotation.BEncodeDictionary;
 import com.github.picto.bencode.annotation.BEncodeInteger;
 import com.github.picto.bencode.type.BEncodeableDictionary;
-import com.github.picto.php.model.Peer;
+import com.github.picto.pwp.model.Peer;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

@@ -16,6 +16,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.reactivex.netty.protocol.http.client.HttpClient;
 import io.reactivex.netty.protocol.http.client.HttpClientResponse;
+import io.reactivex.netty.protocol.tcp.server.TcpServer;
 import org.junit.Test;
 import rx.functions.Action0;
 import rx.functions.Action1;
@@ -152,6 +153,24 @@ public class RxNettyTest {
             group.shutdownGracefully();
         }
 
+
+    }
+
+    @Test
+    public void shouldListenOnArbitraryPort() {
+        TcpServer<ByteBuf, ByteBuf> server = TcpServer.newServer(0).start(connection -> connection
+                                  /*Write the connection input to the output (echo) after prepending "echo => to it.*/
+                .writeStringAndFlushOnEach(connection.getInput()
+                                          /*Convert the byte buffer to a string, so that it can be printed*/
+                        .map(bb -> bb.toString(Charset.defaultCharset()))
+                                          /*Log each byte buffer recieved*/
+                                //.doOnNext(logger::info)
+                                          /*Prepend echo to the received string.*/
+                        .map(msg -> "echo => " + msg)));
+
+        /*Wait for shutdown if not called from the client (passed an arg)*/
+        System.out.println("server waiting on port " + server.getServerPort());
+        server.awaitShutdown();
 
     }
 }
