@@ -1,4 +1,4 @@
-package com.github.picto.httputil.exception;
+package com.github.picto.network.http.exception;
 
 /**
  * Created by Pierre on 27/08/15.

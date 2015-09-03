@@ -14,6 +14,7 @@ dependencies {
     compile project(':picto-util')
     compile group: 'com.jcraft', name: 'jzlib', version:'1.1.2'
     compile group: 'io.netty', name: 'netty-all', version: '4.1.0.Beta5'
-    compile group: 'io.reactivex', name: 'rxnetty', version: '0.5.0-SNAPSHOT'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version:'4.5'
+    compile group: 'org.apache.commons', name:'commons-lang3', version:'3.4'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }

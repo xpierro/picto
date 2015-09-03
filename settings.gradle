@@ -8,8 +8,6 @@ include 'protocol'
 
 include 'bencode-util'
 
-include 'http-util'
-
 include 'picto-util'
 
 include 'picto-network'

@@ -1,9 +1,9 @@
-package com.github.picto.httputil.serialization;
+package com.github.picto.network.http.serialization;
 
-import com.github.picto.httputil.annotation.GET;
-import com.github.picto.httputil.annotation.URLEncode;
-import com.github.picto.httputil.exception.URLEncodeException;
-import com.github.picto.httputil.stringify.Stringifier;
+import com.github.picto.network.http.annotation.GET;
+import com.github.picto.network.http.annotation.URLEncode;
+import com.github.picto.network.http.exception.URLEncodeException;
+import com.github.picto.network.http.stringify.Stringifier;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.lang.reflect.InvocationTargetException;

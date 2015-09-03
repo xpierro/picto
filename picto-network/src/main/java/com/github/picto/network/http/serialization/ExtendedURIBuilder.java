@@ -1,4 +1,4 @@
-package com.github.picto.httputil.serialization;
+package com.github.picto.network.http.serialization;
 
 import org.apache.http.client.utils.URIBuilder;
 

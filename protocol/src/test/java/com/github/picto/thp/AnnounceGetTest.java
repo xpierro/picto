@@ -9,6 +9,9 @@ import com.github.picto.bencode.type.BEncodeableDictionary;
 import com.github.picto.bencode.type.BEncodeableType;
 import com.github.picto.metainfo.model.MetaInfo;
 import com.github.picto.network.http.GetExecutor;
+import com.github.picto.network.pwp.Message;
+import com.github.picto.network.pwp.PeerWire;
+import com.github.picto.pwp.model.Peer;
 import com.github.picto.thp.exception.THPRequestException;
 import com.github.picto.thp.model.ThpAnnounceEvent;
 import com.github.picto.thp.model.TrackerAnnounceResponseModel;
@@ -28,6 +31,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -139,11 +144,108 @@ public class AnnounceGetTest {
 
                 Assert.assertNotNull(responseModel);
                 shouldEnd.set(true);
+
                 return null;
             }
         });
 
         int i = 0;
+        while (!shouldEnd.get()) {
+            System.out.println("Loop : " + i++);
+            Thread.sleep(10);
+        }
+    }
+
+    @Test
+    public void shouldDoGetRequestWithPeerWire() throws HashException, THPRequestException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, InterruptedException {
+
+        final TrackerAnnounceResponseModel[] responseModel = {null};
+
+        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/metainfo/ubuntu.torrent");
+        BEncodeableDictionary dictionary = (BEncodeableDictionary) new BEncodeReader(stream).readBencodable();
+
+        BEncodeUnserializer<MetaInfo> unserializer = new BEncodeUnserializer<>(dictionary, MetaInfo.class);
+        MetaInfo metaInfo = unserializer.unserialize();
+
+        URI uri = new AnnounceGet()
+                .metaInfo(metaInfo)
+                .announceURI(metaInfo.getAnnounce())
+                .port(6082)
+                .compact(true)
+                .peerId(StaticPeerId.DEFAULT)
+                .event(ThpAnnounceEvent.STARTED)
+                .build()
+                .getUri();
+
+        assertNotNull(uri);
+
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        shouldEnd.set(false);
+
+        GetExecutor getExecutor = new GetExecutor();
+        getExecutor.execute(uri, new Function<byte[], Object>() {
+            @Override
+            public Object apply(byte[] bytes) {
+                try {
+                    byteArrayOutputStream.write(bytes);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        }, new Function<Void, Void>() {
+            @Override
+            public Void apply(Void aVoid) {
+                BEncodeReader bEncodeReader = new BEncodeReader(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
+                BEncodeableType type = null;
+
+                try {
+                    type = bEncodeReader.readBencodable();
+                    responseModel[0] = new BEncodeUnserializer<>((BEncodeableDictionary) type, TrackerAnnounceResponseModel.class).unserialize();
+                } catch (CannotReadBencodedException e) {
+                    e.printStackTrace();
+                } catch (CannotReadTokenException e) {
+                    e.printStackTrace();
+                } catch (CannotUnserializeException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                Assert.assertNotNull(responseModel[0]);
+                shouldEnd.set(true);
+
+                return null;
+            }
+        });
+
+        int i = 0;
+        while (!shouldEnd.get()) {
+            System.out.println("Loop : " + i++);
+            Thread.sleep(10);
+        }
+
+        // We now create a peer wire
+        Peer peer = responseModel[0].getPeers().get(0);
+        PeerWire peerWire = new PeerWire(peer.getHost(), peer.getPort());
+
+        peerWire.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                System.out.println();
+            }
+        });
+
+        peerWire.sendMessage(new Message() {
+            @Override
+            public byte[] getRawBytes() {
+                return new String("Hello").getBytes();
+            }
+        });
+
+        shouldEnd.set(false);
+
         while (!shouldEnd.get()) {
             System.out.println("Loop : " + i++);
             Thread.sleep(10);

@@ -1,7 +1,7 @@
-package com.github.picto.httputil.annotation;
+package com.github.picto.network.http.annotation;
 
-import com.github.picto.httputil.stringify.DefaultStringifier;
-import com.github.picto.httputil.stringify.Stringifier;
+import com.github.picto.network.http.stringify.DefaultStringifier;
+import com.github.picto.network.http.stringify.Stringifier;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

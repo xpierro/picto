@@ -1,4 +1,4 @@
-package com.github.picto.httputil.annotation;
+package com.github.picto.network.http.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

@@ -3,7 +3,6 @@ package com.github.picto.network;
 import com.github.picto.network.exemple.HttpSnoopClientInitializer;
 import com.github.picto.util.ByteArrayUtils;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
@@ -14,18 +13,12 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.concurrent.GenericFutureListener;
-import io.reactivex.netty.protocol.http.client.HttpClient;
-import io.reactivex.netty.protocol.http.client.HttpClientResponse;
-import io.reactivex.netty.protocol.tcp.server.TcpServer;
 import org.junit.Test;
-import rx.functions.Action0;
-import rx.functions.Action1;
 
 import javax.net.ssl.SSLException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -39,41 +32,8 @@ public class RxNettyTest {
     private ByteArrayUtils u;
 
     @Test
-    public void shouldSendAsynchronousGetRequestRxNetty() throws InterruptedException {
-        shouldEnd = new AtomicBoolean(false);
-        HttpClient.newClient("www.google.fr", 80)
-                  /*Creates a GET request with URI "/"*/
-                .createGet("/")
-                  /*Prints the response headers*/
-                .doOnNext(resp -> System.out.println(resp.toString()))
-                  /*Since, we are only interested in the content, now, convert the stream to the content stream*/
-                .flatMap((HttpClientResponse<ByteBuf> resp) ->
-                                resp.getContent()
-                                     /*Convert ByteBuf to string for each content chunk*/
-                                        .map(bb -> bb.toString(Charset.defaultCharset()))
-                ).doOnCompleted(new Action0() {
-            @Override
-            public void call() {
-                System.out.println("Completed");
-                shouldEnd.set(true);
-            }
-        }).forEach(new Action1<String>() {
-                                                                         @Override
-                                                                         public void call(String s) {
-                                                                             System.out.print(s);
-                                                                         }
-                                                                     }
-        );
-        int i = 0;
-        while (!shouldEnd.get()) {
-            System.out.println("Loop : " + i++);
-            Thread.sleep(10);
-        }
-    }
-
-    @Test
     public void shouldSendAsynchronousGetRequestNetty() throws MalformedURLException, URISyntaxException, SSLException {
-        URI uri = new URI("http://www.google.fr");
+        URI uri = new URI("http://torrent.ubuntu.com:6969/announce?port=6082&downloaded=0&info_hash=%FC%8A%15%A2%FA%F2sM%BB%1D%C5%F7%AF%DC%5C%9B%EA%EB%1FY&left=0&event=started&compact=1&uploaded=0&peer_id=-PI0001-%D4%EF%7D%02%5E%C8%9FU.%3F%F3X");
         String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
         String host = uri.getHost() == null ? "127.0.0.1" : uri.getHost();
         int port = uri.getPort();
@@ -114,7 +74,7 @@ public class RxNettyTest {
 
             // Prepare the HTTP request.
             HttpRequest request = new DefaultFullHttpRequest(
-                    HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath());
+                    HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath() + "?" + uri.getRawQuery());
             request.headers().set(HttpHeaderNames.HOST, host);
             request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
             request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
@@ -156,21 +116,4 @@ public class RxNettyTest {
 
     }
 
-    @Test
-    public void shouldListenOnArbitraryPort() {
-        TcpServer<ByteBuf, ByteBuf> server = TcpServer.newServer(0).start(connection -> connection
-                                  /*Write the connection input to the output (echo) after prepending "echo => to it.*/
-                .writeStringAndFlushOnEach(connection.getInput()
-                                          /*Convert the byte buffer to a string, so that it can be printed*/
-                        .map(bb -> bb.toString(Charset.defaultCharset()))
-                                          /*Log each byte buffer recieved*/
-                                //.doOnNext(logger::info)
-                                          /*Prepend echo to the received string.*/
-                        .map(msg -> "echo => " + msg)));
-
-        /*Wait for shutdown if not called from the client (passed an arg)*/
-        System.out.println("server waiting on port " + server.getServerPort());
-        server.awaitShutdown();
-
-    }
 }

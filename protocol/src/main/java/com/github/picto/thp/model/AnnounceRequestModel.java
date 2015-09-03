@@ -1,9 +1,9 @@
 package com.github.picto.thp.model;
 
-import com.github.picto.httputil.annotation.GET;
-import com.github.picto.httputil.annotation.URLEncode;
-import com.github.picto.httputil.stringify.BooleanStringifier;
-import com.github.picto.httputil.stringify.HashStringifier;
+import com.github.picto.network.http.annotation.GET;
+import com.github.picto.network.http.annotation.URLEncode;
+import com.github.picto.network.http.stringify.BooleanStringifier;
+import com.github.picto.network.http.stringify.HashStringifier;
 
 /**
  * Model of a request sent to a tracker announce url for information about a torrent.

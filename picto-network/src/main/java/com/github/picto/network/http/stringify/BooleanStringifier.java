@@ -1,4 +1,4 @@
-package com.github.picto.httputil.stringify;
+package com.github.picto.network.http.stringify;
 
 /**
  * Created by Pierre on 27/08/15.

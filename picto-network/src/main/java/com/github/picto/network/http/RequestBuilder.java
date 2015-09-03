@@ -1,7 +1,7 @@
-package com.github.picto.httputil.http;
+package com.github.picto.network.http;
 
-import com.github.picto.httputil.exception.URLEncodeException;
-import com.github.picto.httputil.serialization.URLEncodeSerializer;
+import com.github.picto.network.http.exception.URLEncodeException;
+import com.github.picto.network.http.serialization.URLEncodeSerializer;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.net.URI;

@@ -14,7 +14,6 @@ dependencies {
 
     compile project(':bencode')
     compile project(':bencode-util')
-    compile project(':http-util')
     compile project(':picto-util')
     compile project(':picto-network')
     testCompile group: 'junit', name: 'junit', version: '4.11'
