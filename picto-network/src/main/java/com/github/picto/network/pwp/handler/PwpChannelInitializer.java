@@ -4,7 +4,6 @@ import com.github.picto.network.pwp.PeerWire;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.FixedLengthFrameDecoder;
 import io.netty.handler.codec.bytes.ByteArrayDecoder;
 import io.netty.handler.codec.bytes.ByteArrayEncoder;
 
@@ -28,13 +27,15 @@ public abstract class PwpChannelInitializer extends ChannelInitializer<SocketCha
     public void initChannel(final SocketChannel ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
 
-        pipeline.addLast("handshakeFrame", new FixedLengthFrameDecoder(68));
-        pipeline.addLast(new ByteArrayDecoder());
-        pipeline.addLast(new ByteArrayEncoder());
-
         PeerWire peerWire = new PeerWire(ch);
 
-        pipeline.addLast(new PwpHandshakeChannelHandler(peerWire));
+        pipeline.addLast(new PwpHandshakeDecoder());
+
+        pipeline.addLast(new ByteArrayDecoder());
+
+        pipeline.addLast(new PwpChannelHandler(peerWire));
+
+        pipeline.addLast(new ByteArrayEncoder());
 
         onNewWire(peerWire);
     }

@@ -4,9 +4,7 @@ import com.github.picto.network.pwp.PeerWire;
 import com.github.picto.network.pwp.message.PwpHandshakeMessage;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
-import java.nio.ByteOrder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,14 +36,9 @@ public class PwpHandshakeChannelHandler extends SimpleChannelInboundHandler<byte
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Received a potential handshake of length " + msg.length);
         PwpHandshakeMessage handshakeMessage = new PwpHandshakeMessage(msg);
 
-
+        ctx.pipeline().addLast(new PwpChannelHandler(peerWire));
         // We remove the handshake handler
         ctx.pipeline().remove(this);
-        // We remove the fixed-sized frame
-        ctx.pipeline().remove("handshakeFrame");
-
-        ctx.pipeline().addFirst(new LengthFieldBasedFrameDecoder(ByteOrder.BIG_ENDIAN, Integer.MAX_VALUE, 0, 4, 0, 4, true));
-        ctx.pipeline().addLast(new PwpChannelHandler(peerWire));
 
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "New handshake received from " + peerWire);
 
