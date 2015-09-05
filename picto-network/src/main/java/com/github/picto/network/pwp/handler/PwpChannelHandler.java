@@ -1,5 +1,6 @@
-package com.github.picto.network.pwp;
+package com.github.picto.network.pwp.handler;
 
+import com.github.picto.network.pwp.PeerWire;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -16,7 +17,6 @@ public class PwpChannelHandler extends SimpleChannelInboundHandler<byte[]> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, byte[] msg) throws Exception {
-        // TODO: here do more protocole stuff (emit message only if complete etc
         peerWire.emitMessage(msg);
     }
 }

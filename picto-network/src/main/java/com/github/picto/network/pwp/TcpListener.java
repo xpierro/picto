@@ -1,10 +1,14 @@
 package com.github.picto.network.pwp;
 
+import com.github.picto.network.pwp.handler.PwpChannelInitializer;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+
+import java.util.Observable;
 
 /**
  * Peer Wire Protocol listener, listening on a port for new client request.
@@ -13,7 +17,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  * TODO: this is to be done on another level.
  * Created by Pierre on 02/09/15.
  */
-public abstract class TcpListener {
+public abstract class TcpListener extends Observable {
 
     private final int port;
     private ServerBootstrap serverBootstrap;
@@ -36,18 +40,11 @@ public abstract class TcpListener {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
-                .childHandler(new ChannelInitializer<SocketChannel>() {
+                .childHandler(new PwpChannelInitializer() {
                     @Override
-                    public void initChannel(SocketChannel ch) throws Exception {
-                        ChannelPipeline p = ch.pipeline();
-
-                        final PeerWire peerWire = new PeerWire(ch);
+                    public void onNewWire(final PeerWire peerWire) {
                         emitWire(peerWire);
-
-                        p.addLast(new PwpChannelHandler(peerWire));
-
                     }
-
                 })
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true);

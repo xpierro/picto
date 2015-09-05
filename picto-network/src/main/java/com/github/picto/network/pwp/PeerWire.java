@@ -1,17 +1,9 @@
 package com.github.picto.network.pwp;
 
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import com.github.picto.network.pwp.message.Message;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
 import java.util.Observable;
 
 /**
@@ -20,27 +12,11 @@ import java.util.Observable;
  * Created by Pierre on 03/09/15.
  */
 public class PeerWire extends Observable {
+
     private SocketChannel socketChannel;
 
     public PeerWire(final SocketChannel socketChannel) {
         this.socketChannel = socketChannel;
-    }
-
-    public PeerWire(final InetAddress address, final int port) {
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
-        Bootstrap b = new Bootstrap();
-        b.group(workerGroup);
-        b.channel(NioSocketChannel.class);
-        b.option(ChannelOption.SO_KEEPALIVE, true);
-        b.handler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            public void initChannel(SocketChannel ch) throws Exception {
-                socketChannel = ch;
-                ch.pipeline().addLast(new PwpChannelHandler(PeerWire.this));
-            }
-        });
-
-        ChannelFuture f = b.connect(address, port);
     }
 
     public void emitMessage(final Object message) {
@@ -50,10 +26,19 @@ public class PeerWire extends Observable {
 
     public void sendMessage(final Message message) {
         byte[] bytes = message.getRawBytes();
-        ByteBuffer buf = ByteBuffer.allocate(bytes.length);
-        buf.clear();
-        buf.put(bytes);
-        socketChannel.writeAndFlush(buf);
+        try {
+            // TODO: do we need to synchronize here
+            socketChannel.writeAndFlush(bytes).sync();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String toString() {
+        String ip = socketChannel.remoteAddress().getHostString();
+        int port = socketChannel.remoteAddress().getPort();
+
+        return ip + ":" + port;
     }
 
 }

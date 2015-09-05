@@ -9,14 +9,16 @@ import com.github.picto.bencode.type.BEncodeableDictionary;
 import com.github.picto.bencode.type.BEncodeableType;
 import com.github.picto.metainfo.model.MetaInfo;
 import com.github.picto.network.http.GetExecutor;
-import com.github.picto.network.pwp.Message;
 import com.github.picto.network.pwp.PeerWire;
+import com.github.picto.network.pwp.TcpSender;
+import com.github.picto.network.pwp.message.PwpHandshakeMessage;
 import com.github.picto.pwp.model.Peer;
 import com.github.picto.thp.exception.THPRequestException;
 import com.github.picto.thp.model.ThpAnnounceEvent;
 import com.github.picto.thp.model.TrackerAnnounceResponseModel;
 import com.github.picto.thp.model.peerid.StaticPeerId;
 import com.github.picto.thp.request.AnnounceGet;
+import com.github.picto.util.Hasher;
 import com.github.picto.util.exception.HashException;
 import junit.framework.Assert;
 import org.apache.http.HttpResponse;
@@ -228,21 +230,21 @@ public class AnnounceGetTest {
 
         // We now create a peer wire
         Peer peer = responseModel[0].getPeers().get(0);
-        PeerWire peerWire = new PeerWire(peer.getHost(), peer.getPort());
 
-        peerWire.addObserver(new Observer() {
+        TcpSender tcpSender = new TcpSender() {
             @Override
-            public void update(Observable o, Object arg) {
+            public void emitPeerWire(PeerWire peerWire) {
                 System.out.println();
+                peerWire.addObserver(new Observer() {
+                    @Override
+                    public void update(Observable o, Object arg) {
+                        System.out.println();
+                    }
+                });
             }
-        });
+        };
 
-        peerWire.sendMessage(new Message() {
-            @Override
-            public byte[] getRawBytes() {
-                return new String("Hello").getBytes();
-            }
-        });
+        tcpSender.sendHandshake(peer.getHost(), peer.getPort(), new PwpHandshakeMessage().peerId(StaticPeerId.DEFAULT.getPeerIdBytes()).infoHash(Hasher.sha1(metaInfo.getInformation().getBEncodeableDictionary().getBEncodedBytes())));
 
         shouldEnd.set(false);
 
