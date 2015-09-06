@@ -32,6 +32,8 @@ public class PwpHandshakeMessage implements Message {
         }
     }
 
+    private MessageType messageType;
+
     private byte pstrLength;
 
     private byte[] pstr;
@@ -85,6 +87,16 @@ public class PwpHandshakeMessage implements Message {
         System.arraycopy(getPeerId(), 0, bytes, position, PEER_ID_LENGTH);
 
         return bytes;
+    }
+
+    @Override
+    public void setType(MessageType messageType) {
+        this.messageType = messageType;
+    }
+
+    @Override
+    public MessageType getType() {
+        return messageType;
     }
 
     // TODO: make a generic version

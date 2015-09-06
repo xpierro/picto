@@ -14,6 +14,15 @@ public class ByteArrayUtils {
         return data;
     }
 
+    //TODO: be careful of the unsigned shift operator
+    public static byte[] integerToByteArray(int value) {
+        return new byte[] {
+                (byte)(value >>> 24),
+                (byte)(value >>> 16),
+                (byte)(value >>> 8),
+                (byte)value};
+    }
+
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];

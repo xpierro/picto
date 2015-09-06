@@ -224,8 +224,8 @@ public class AnnounceGetTest {
 
         int i = 0;
         while (!shouldEnd.get()) {
-            System.out.println("Loop : " + i++);
-            Thread.sleep(10);
+
+            Thread.sleep(100);
         }
 
         // We now create a peer wire
@@ -249,8 +249,8 @@ public class AnnounceGetTest {
         shouldEnd.set(false);
 
         while (!shouldEnd.get()) {
-            System.out.println("Loop : " + i++);
-            Thread.sleep(10);
+
+            Thread.sleep(100);
         }
     }
 }

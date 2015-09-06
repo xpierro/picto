@@ -19,7 +19,7 @@ public class PeerWire extends Observable {
         this.socketChannel = socketChannel;
     }
 
-    public void emitMessage(final Object message) {
+    public void emitMessage(final Message message) {
 
         this.notifyObservers(message);
     }

@@ -1,8 +1,12 @@
 package com.github.picto.network.pwp.handler;
 
 import com.github.picto.network.pwp.PeerWire;
+import com.github.picto.network.pwp.message.MessageFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Pierre on 04/09/15.
@@ -17,6 +21,10 @@ public class PwpChannelHandler extends SimpleChannelInboundHandler<byte[]> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, byte[] msg) throws Exception {
-        peerWire.emitMessage(msg);
+        if (msg.length == 0) {
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "A keep-alive message has been received");
+        } else {
+            peerWire.emitMessage(MessageFactory.getMessage(msg));
+        }
     }
 }

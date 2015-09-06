@@ -26,7 +26,7 @@ public class PwpHandshakeDecoder extends FixedLengthFrameDecoder {
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
         Object handshake = super.decode(ctx, in);
 
-        ctx.pipeline().addFirst(new LengthFieldBasedFrameDecoder(ByteOrder.BIG_ENDIAN, Integer.MAX_VALUE, 0, 4, 0, 0, true));
+        ctx.pipeline().addFirst(new LengthFieldBasedFrameDecoder(ByteOrder.BIG_ENDIAN, Integer.MAX_VALUE, 0, 4, 0, 4, true));
         ctx.pipeline().remove(this);
         if (in.isReadable()) {
             return new Object[] { in.readBytes(in.readableBytes())};
