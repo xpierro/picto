@@ -74,7 +74,7 @@ public class BEncodeReaderTest {
 
     @Test
     public void shouldReadTorrentFile() throws CannotReadTokenException, CannotReadBencodedException {
-        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/metainfo/ubuntu.torrent");
+        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/protocol/metainfo/ubuntu.torrent");
         BEncodeableDictionary dictionary = (BEncodeableDictionary) new BEncodeReader(stream).readBencodable();
         assertNotNull(dictionary);
         assertEquals("Ubuntu CD releases.ubuntu.com", ((BEncodeableByteArray) dictionary.get("comment").get()).toUtf8String().get());

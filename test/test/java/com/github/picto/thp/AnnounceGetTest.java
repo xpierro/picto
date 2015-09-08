@@ -1,4 +1,4 @@
-package com.github.picto.thp;
+package com.github.picto.protocol.thp;
 
 import com.github.picto.bencode.BEncodeReader;
 import com.github.picto.bencode.exception.CannotReadBencodedException;
@@ -7,11 +7,11 @@ import com.github.picto.bencode.exception.CannotUnserializeException;
 import com.github.picto.bencode.serialization.BEncodeUnserializer;
 import com.github.picto.bencode.type.BEncodeableDictionary;
 import com.github.picto.bencode.type.BEncodeableType;
-import com.github.picto.metainfo.model.MetaInfo;
-import com.github.picto.thp.exception.THPRequestException;
-import com.github.picto.thp.model.ThpAnnounceEvent;
-import com.github.picto.thp.model.peerid.StaticPeerId;
-import com.github.picto.thp.request.AnnounceGet;
+import com.github.picto.protocol.metainfo.model.MetaInfo;
+import com.github.picto.protocol.thp.exception.THPRequestException;
+import com.github.picto.protocol.thp.model.ThpAnnounceEvent;
+import com.github.picto.protocol.thp.model.peerid.StaticPeerId;
+import com.github.picto.protocol.thp.request.AnnounceGet;
 import com.github.picto.util.exception.HashException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;

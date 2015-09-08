@@ -1,7 +1,7 @@
 package com.github.picto.protocol.thp.request;
 
 import com.github.picto.network.http.exception.URLEncodeException;
-import com.github.picto.httputil.http.RequestBuilder;
+import com.github.picto.network.http.RequestBuilder;
 import com.github.picto.protocol.metainfo.model.IMetaInfo;
 import com.github.picto.protocol.thp.exception.THPRequestException;
 import com.github.picto.protocol.thp.model.AnnounceRequestModel;

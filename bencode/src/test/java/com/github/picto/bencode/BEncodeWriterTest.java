@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 public class BEncodeWriterTest {
     @Test
     public void shouldProduceCompatibleTorrentFile() throws CannotReadTokenException, CannotReadBencodedException, IOException, CannotWriteBencodedException {
-        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/metainfo/ubuntu.torrent");
+        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/protocol/metainfo/ubuntu.torrent");
         BEncodeableDictionary dictionary = (BEncodeableDictionary) new BEncodeReader(stream).readBencodable();
 
         // We now write the expected result to a byte array
 
-        InputStream input = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/metainfo/ubuntu.torrent");
+        InputStream input = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/protocol/metainfo/ubuntu.torrent");
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 

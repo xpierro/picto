@@ -7,7 +7,7 @@ import com.github.picto.bencode.exception.CannotUnserializeException;
 import com.github.picto.bencode.serialization.BEncodeUnserializer;
 import com.github.picto.bencode.type.BEncodeableDictionary;
 import com.github.picto.network.http.exception.URLEncodeException;
-import com.github.picto.httputil.http.RequestBuilder;
+import com.github.picto.network.http.RequestBuilder;
 import com.github.picto.protocol.metainfo.model.MetaInfo;
 import com.github.picto.protocol.thp.model.AnnounceRequestModel;
 import com.github.picto.util.ByteArrayUtils;

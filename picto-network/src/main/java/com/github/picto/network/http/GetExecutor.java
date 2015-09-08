@@ -1,5 +1,8 @@
 package com.github.picto.network.http;
 
+import com.github.picto.network.http.event.HttpResponseReceivedEvent;
+import com.google.common.eventbus.EventBus;
+import com.google.inject.Inject;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -14,12 +17,14 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import javax.net.ssl.SSLException;
 import java.net.URI;
-import java.util.function.Function;
 
 /**
  * Created by Pierre on 31/08/15.
  */
 public class GetExecutor {
+    @Inject
+    private EventBus eventBus;
+
     private static final String LOCALHOST = "127.0.0.1";
     private static final String HTTP = "http";
     private static final String HTTPS = "https";
@@ -38,13 +43,13 @@ public class GetExecutor {
 
     private byte[] response;
 
-    private Function<byte[], ?> onByteReceived;
-    private Function<Void, Void> onConnectionClose;
+    private HttpRequest request;
 
     private final SimpleChannelInboundHandler<HttpObject> handler = new SimpleChannelInboundHandler<HttpObject>() {
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
+
             if (msg instanceof HttpResponse) {
                 HttpResponse response = (HttpResponse) msg;
 
@@ -58,6 +63,7 @@ public class GetExecutor {
 
                 }
             }
+
             if (msg instanceof HttpContent) {
                 HttpContent content = (HttpContent) msg;
                 ByteBuf buf = content.content();
@@ -66,14 +72,18 @@ public class GetExecutor {
 
                 response = ArrayUtils.addAll(response, fragment);
 
-                onByteReceived.apply(fragment);
-
                 if (content instanceof LastHttpContent) {
 
                     ctx.close();
-                    onConnectionClose.apply(null);
+                    eventBus.post(new HttpResponseReceivedEvent(response));
                 }
             }
+        }
+
+        @Override
+        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            super.channelActive(ctx);
+            ctx.channel().writeAndFlush(request);
         }
 
         @Override
@@ -115,50 +125,35 @@ public class GetExecutor {
     private void send() {
         // Configure the client.
         EventLoopGroup group = new NioEventLoopGroup();
-        try {
-            bootstrap = new Bootstrap();
-            bootstrap.group(group)
-                    .channel(NioSocketChannel.class)
-                    .handler(new HttpClientInitializer(sslCtx, handler));
 
-            // Make the connection attempt.
-            Channel ch = bootstrap.connect(host, port).sync().channel();
+        bootstrap = new Bootstrap();
+        bootstrap.group(group)
+                .channel(NioSocketChannel.class)
+                .handler(new HttpClientInitializer(sslCtx, handler));
 
-            // Prepare the HTTP request.
-            HttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath() + "?" + uri.getRawQuery());
-            request.headers().set(HttpHeaderNames.HOST, host);
-            request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
-            request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
+        // Make the connection attempt.
+        Channel ch = bootstrap.connect(host, port).channel();
+        //ch.pipeline().addLast(handler);
 
-            // Set some example cookies.
-            /*request.headers().set(
-                    HttpHeaderNames.COOKIE,
-                    io.netty.handler.codec.http.cookie.ClientCookieEncoder.STRICT.encode(
-                            new io.netty.handler.codec.http.cookie.DefaultCookie("my-cookie", "foo"),
-                            new io.netty.handler.codec.http.cookie.DefaultCookie("another-cookie", "bar")));*/
+        // Prepare the HTTP request.
+        request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath() + "?" + uri.getRawQuery());
+        request.headers().set(HttpHeaderNames.HOST, host);
+        request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+        request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
 
-            // Send the HTTP request.
+        // Send the HTTP request.
 
-            ch.closeFuture().addListener(new GenericFutureListener<ChannelFuture>() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    group.shutdownGracefully();
+        ch.closeFuture().addListener(new GenericFutureListener<ChannelFuture>() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                //group.shutdownGracefully();
 
-                }
-            });
-
-            ch.writeAndFlush(request);
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            }
+        });
     }
 
-    public void execute(final URI requestURI, Function<byte[], ?> onByteReceived, Function<Void, Void> onConnectionClose) {
+    public void execute(final URI requestURI) {
         response = new byte[0];
-
-        this.onByteReceived = onByteReceived;
-        this.onConnectionClose = onConnectionClose;
 
         this.uri = requestURI;
 
@@ -170,4 +165,6 @@ public class GetExecutor {
         }
         send();
     }
+
+
 }
