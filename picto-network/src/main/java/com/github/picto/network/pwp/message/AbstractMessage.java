@@ -5,7 +5,7 @@ import com.github.picto.network.pwp.exception.CannotReadMessageException;
 /**
  * Created by Pierre on 06/09/15.
  */
-public class AbstractMessage implements Message {
+public abstract class AbstractMessage implements Message {
 
     protected byte[] bytes;
     protected MessageType messageType;
@@ -30,13 +30,4 @@ public class AbstractMessage implements Message {
         return bytes;
     }
 
-    @Override
-    public void setType(MessageType messageType) {
-        this.messageType = messageType;
-    }
-
-    @Override
-    public MessageType getType() {
-        return messageType;
-    }
 }

@@ -7,4 +7,9 @@ public class RequestMessage extends AbstractMessage implements Message {
     public RequestMessage(byte[] bytes) {
         super(bytes);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.REQUEST;
+    }
 }

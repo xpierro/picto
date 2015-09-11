@@ -10,7 +10,7 @@ import com.github.picto.bencode.type.BEncodeableType;
 import com.github.picto.network.http.GetExecutor;
 import com.github.picto.network.http.event.HttpResponseReceivedEvent;
 import com.github.picto.network.pwp.PeerWire;
-import com.github.picto.network.pwp.TcpSender;
+import com.github.picto.network.pwp.TcpConnecter;
 import com.github.picto.network.pwp.event.NewPeerWireEvent;
 import com.github.picto.network.pwp.message.PwpHandshakeMessage;
 import com.github.picto.protocol.event.MaxConnectionsChangedEvent;
@@ -54,7 +54,7 @@ public class Client {
     private GetExecutor getExecutor;
 
     @Inject
-    private TcpSender tcpSender;
+    private TcpConnecter tcpConnecter;
 
     public static enum PieceStatus {
         DO_NOT_HAVE,
@@ -224,30 +224,34 @@ public class Client {
 
     public void connectToPeer(final Peer peer) throws HashException {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Attempting to connect to " + peer);
-        tcpSender.sendHandshake(
+        tcpConnecter.connect(
                 peer.getHost(),
-                peer.getPort(),
-                new PwpHandshakeMessage()
-                        .infoHash(Hasher.sha1(metaInfo.getInformation().getBEncodeableDictionary().getBEncodedBytes()))
-                        .peerId(peerId.getPeerIdBytes())
+                peer.getPort()
         );
     }
 
     @Subscribe
-    public void handleNewPeerWire(final NewPeerWireEvent peerWireEvent) {
+    public void handleNewPeerWire(final NewPeerWireEvent peerWireEvent) throws HashException {
         final PeerWire peerWire = peerWireEvent.getPeerWire();
 
         // We erase any old peer information from that host.
         InetAddress peerAddress = peerWire.getHost();
+        final Peer peer;
         if (peers.containsKey(peerAddress)) {
-            peers.get(peerAddress).setPeerWire(peerWire);
+            peer = peers.get(peerAddress);
+            peer.setPeerWire(peerWire);
         } else {
-            peers.put(peerAddress, new Peer(peerWire));
+            peer = new Peer(peerWire);
+            peers.put(peerAddress, peer);
         }
-        fireNewConnectedPeer();
+        fireNewConnectedPeer(peer);
     }
 
-    private void fireNewConnectedPeer() {
+    private void fireNewConnectedPeer(final Peer peer) throws HashException {
+        // We send our handshake
+        peer.sendMessage(new PwpHandshakeMessage()
+                .infoHash(Hasher.sha1(metaInfo.getInformation().getBEncodeableDictionary().getBEncodedBytes()))
+                .peerId(peerId.getPeerIdBytes()));
         eventBus.post(new NewConnectedPeerEvent());
     }
 

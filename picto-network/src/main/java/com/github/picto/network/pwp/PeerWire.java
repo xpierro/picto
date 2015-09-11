@@ -7,6 +7,8 @@ import io.netty.channel.Channel;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Observable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Peer connection, allowing to receive and send message to a peer.
@@ -27,6 +29,7 @@ public class PeerWire extends Observable {
     }
 
     public void sendMessage(final Message message) {
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Sending a new message of type " + message.getType());
         byte[] bytes = message.getRawBytes();
         try {
             // TODO: do we need to synchronize here

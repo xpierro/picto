@@ -7,4 +7,9 @@ public class InterestedMessage extends AbstractMessage implements Message {
     public InterestedMessage(byte[] bytes) {
         super(bytes);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.INTERESTED;
+    }
 }

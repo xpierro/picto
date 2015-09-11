@@ -7,4 +7,9 @@ public class UnChokeMessage extends AbstractMessage implements Message {
     public UnChokeMessage(byte[] bytes) {
         super(bytes);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.UNCHOKE;
+    }
 }

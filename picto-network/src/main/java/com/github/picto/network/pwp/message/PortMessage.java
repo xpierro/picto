@@ -7,4 +7,9 @@ public class PortMessage extends AbstractMessage implements Message {
     public PortMessage(byte[] bytes) {
         super(bytes);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.PORT;
+    }
 }

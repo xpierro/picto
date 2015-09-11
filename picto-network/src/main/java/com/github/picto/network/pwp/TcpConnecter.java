@@ -1,10 +1,8 @@
 package com.github.picto.network.pwp;
 
 import com.github.picto.network.pwp.handler.PwpChannelInitializer;
-import com.github.picto.network.pwp.message.PwpHandshakeMessage;
 import com.google.inject.Inject;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -20,12 +18,12 @@ import java.util.logging.Logger;
  *
  * Created by Pierre on 06/09/15.
  */
-public class TcpSender {
+public class TcpConnecter {
 
     @Inject
     private PwpChannelInitializer channelInitializer;
 
-    public void sendHandshake(final InetAddress address, final int port, final PwpHandshakeMessage handshakeMessage) {
+    public void connect(final InetAddress address, final int port) {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(workerGroup);
@@ -35,12 +33,8 @@ public class TcpSender {
         // Will post a peerwire to the event bus once created.
         bootstrap.handler(channelInitializer);
 
-        try {
-            Channel channel = bootstrap.connect(address, port).sync().channel();
-            channel.writeAndFlush(handshakeMessage.getRawBytes()).sync();
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Handshaking " + address.getHostName() + " : " + port);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        bootstrap.connect(address, port);
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Connecting to " + address.getHostName() + " : " + port);
+
     }
 }

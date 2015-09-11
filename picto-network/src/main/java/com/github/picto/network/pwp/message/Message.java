@@ -11,12 +11,6 @@ public interface Message {
     byte[] getRawBytes();
 
     /**
-     * Sets the underlying message type.
-     * @param messageType A message type.
-     */
-    void setType(MessageType messageType);
-
-    /**
      * Returns the message type.
      * @return
      */

@@ -41,6 +41,8 @@ public class PwpChannelInitializer extends ChannelInitializer<SocketChannel> {
             public void channelActive(ChannelHandlerContext ctx) throws Exception {
                 super.channelActive(ctx);
 
+                // The new peerwire can only be sent to the rest of the application after the socket has been connected
+                // successfully
                 eventBus.post(new NewPeerWireEvent(peerWire));
             }
         });

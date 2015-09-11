@@ -90,13 +90,8 @@ public class PwpHandshakeMessage implements Message {
     }
 
     @Override
-    public void setType(MessageType messageType) {
-        this.messageType = messageType;
-    }
-
-    @Override
     public MessageType getType() {
-        return messageType;
+        return MessageType.HANDSHAKE;
     }
 
     // TODO: make a generic version

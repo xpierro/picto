@@ -7,4 +7,9 @@ public class NotInterestedMessage extends AbstractMessage implements Message {
     public NotInterestedMessage(byte[] bytes) {
         super(bytes);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.NOT_INTERESTED;
+    }
 }

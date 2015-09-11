@@ -7,4 +7,9 @@ public class BitFieldMessage extends AbstractMessage implements Message {
     public BitFieldMessage(byte[] bytes) {
         super(bytes);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.BITFIELD;
+    }
 }

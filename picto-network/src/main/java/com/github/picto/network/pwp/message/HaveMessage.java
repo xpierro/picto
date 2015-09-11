@@ -25,4 +25,8 @@ public class HaveMessage extends AbstractMessage implements Message {
     }
 
 
+    @Override
+    public MessageType getType() {
+        return MessageType.HAVE;
+    }
 }

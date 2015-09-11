@@ -7,4 +7,9 @@ public class CancelMessage extends AbstractMessage implements Message {
     public CancelMessage(byte[] bytes) {
         super(bytes);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.CANCEL;
+    }
 }

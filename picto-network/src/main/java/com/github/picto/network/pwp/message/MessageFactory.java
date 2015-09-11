@@ -61,8 +61,6 @@ public class MessageFactory {
                 throw new CannotReadMessageException("Impossible to decode the message type " + messageType);
         }
 
-        message.setType(messageType);
-
         Logger.getLogger(MessageFactory.class.getName()).log(Level.INFO, "Received a message of type " + messageType);
 
         return message;

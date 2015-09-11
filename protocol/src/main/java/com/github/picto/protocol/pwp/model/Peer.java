@@ -1,6 +1,7 @@
 package com.github.picto.protocol.pwp.model;
 
 import com.github.picto.network.pwp.PeerWire;
+import com.github.picto.network.pwp.message.Message;
 
 import java.net.InetAddress;
 import java.nio.charset.Charset;
@@ -99,6 +100,10 @@ public class Peer {
 
     public void setInterestedInUs(boolean interestedInUs) {
         this.interestedInUs = interestedInUs;
+    }
+
+    public void sendMessage(final Message message) {
+        peerWire.sendMessage(message);
     }
 
     @Override

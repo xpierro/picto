@@ -10,4 +10,9 @@ public class ChokeMessage extends AbstractMessage implements Message {
     public ChokeMessage(byte[] bytes) throws CannotReadMessageException {
         super(bytes, 1);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.CHOKE;
+    }
 }

@@ -7,4 +7,9 @@ public class PieceMessage extends AbstractMessage implements Message {
     public PieceMessage(byte[] bytes) {
         super(bytes);
     }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.PIECE;
+    }
 }
