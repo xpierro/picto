@@ -2,6 +2,7 @@ package com.github.picto.network.pwp;
 
 import com.github.picto.network.pwp.handler.PwpChannelInitializer;
 import com.github.picto.network.pwp.message.PwpHandshakeMessage;
+import com.google.inject.Inject;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
@@ -19,7 +20,10 @@ import java.util.logging.Logger;
  *
  * Created by Pierre on 06/09/15.
  */
-public abstract class TcpSender {
+public class TcpSender {
+
+    @Inject
+    private PwpChannelInitializer channelInitializer;
 
     public void sendHandshake(final InetAddress address, final int port, final PwpHandshakeMessage handshakeMessage) {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -27,12 +31,9 @@ public abstract class TcpSender {
         bootstrap.group(workerGroup);
         bootstrap.channel(NioSocketChannel.class);
         bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-        bootstrap.handler(new PwpChannelInitializer() {
-            @Override
-            public void onNewWire(final PeerWire peerWire) {
-                emitPeerWire(peerWire);
-            }
-        });
+
+        // Will post a peerwire to the event bus once created.
+        bootstrap.handler(channelInitializer);
 
         try {
             Channel channel = bootstrap.connect(address, port).sync().channel();
@@ -42,7 +43,4 @@ public abstract class TcpSender {
             e.printStackTrace();
         }
     }
-
-    public abstract void emitPeerWire(final PeerWire peerWire);
-
 }

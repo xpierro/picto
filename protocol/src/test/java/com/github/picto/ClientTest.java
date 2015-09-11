@@ -6,6 +6,7 @@ import com.github.picto.bencode.exception.CannotUnserializeException;
 import com.github.picto.module.ProtocolModule;
 import com.github.picto.protocol.client.Client;
 import com.github.picto.protocol.event.MetaInfoLoadedEvent;
+import com.github.picto.protocol.event.NewConnectedPeerEvent;
 import com.github.picto.protocol.event.PeerListChangedEvent;
 import com.github.picto.protocol.metainfo.model.MetaInfo;
 import com.github.picto.protocol.pwp.model.Peer;
@@ -18,7 +19,7 @@ import com.google.inject.Injector;
 import org.junit.Test;
 
 import java.io.InputStream;
-import java.util.Set;
+import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +40,7 @@ public class ClientTest {
 
     private MetaInfo metaInfo;
 
-    private Set<Peer> peers;
+    private Collection<Peer> peers;
 
     private void initGuice() {
         Injector injector = Guice.createInjector(new ProtocolModule());
@@ -78,6 +79,12 @@ public class ClientTest {
         lock.countDown();
     }
 
+    @Subscribe
+    public void newConnectedPeer(NewConnectedPeerEvent event) {
+        System.out.println("New connected peer received");
+        lock.countDown();
+    }
+
     @Test
     public void clientShouldLoadMetaInfo() throws CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, InterruptedException {
         lock = new CountDownLatch(1);
@@ -110,6 +117,33 @@ public class ClientTest {
 
         System.out.println("The client returned " + peers.size() + " peers : " + peers);
 
+    }
+
+    @Test
+    public void clientShouldConnectToPeer() throws CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, THPRequestException, HashException, InterruptedException {
+        lock = new CountDownLatch(2);
+
+        initGuice();
+        initEventBus();
+        initTorrentStream();
+        initClient();
+
+        client.loadMetaInfo(torrentStream);
+        client.refreshPeerList();
+
+        System.out.println("Refreshing peer list");
+        lock.await(30, TimeUnit.SECONDS);
+        assertNotNull(peers);
+        assertFalse(peers.isEmpty());
+
+        lock = new CountDownLatch(1);
+        // We take the first peer of the list
+        Peer testedPeer = peers.iterator().next();
+        client.connectToPeer(testedPeer);
+        lock.await(30, TimeUnit.SECONDS);
+
+        assertNotNull(testedPeer.getPeerWire());
+        System.out.println("A new peerwire has been created for " + peers);
     }
 
 }

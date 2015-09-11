@@ -27,12 +27,15 @@ public class PwpHandshakeDecoder extends FixedLengthFrameDecoder {
         Object handshake = super.decode(ctx, in);
 
         ctx.pipeline().addFirst(new LengthFieldBasedFrameDecoder(ByteOrder.BIG_ENDIAN, Integer.MAX_VALUE, 0, 4, 0, 4, true));
-        ctx.pipeline().remove(this);
         if (in.isReadable()) {
-            return new Object[] { in.readBytes(in.readableBytes())};
+            Object[] response = new Object[] { in.readBytes(in.readableBytes())};
+            ctx.pipeline().remove(this);
+            return response;
         } else {
+            ctx.pipeline().remove(this);
             return handshake;
         }
+
     }
 
 }

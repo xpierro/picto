@@ -1,6 +1,8 @@
 package com.github.picto.network.pwp;
 
 import com.github.picto.network.pwp.handler.PwpChannelInitializer;
+import com.google.common.eventbus.EventBus;
+import com.google.inject.Inject;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -18,6 +20,12 @@ import java.util.Observable;
  * Created by Pierre on 02/09/15.
  */
 public abstract class TcpListener extends Observable {
+
+    @Inject
+    private EventBus eventBus;
+
+    @Inject
+    private PwpChannelInitializer channelInitializer;
 
     private final int port;
     private ServerBootstrap serverBootstrap;
@@ -40,12 +48,7 @@ public abstract class TcpListener extends Observable {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
-                .childHandler(new PwpChannelInitializer() {
-                    @Override
-                    public void onNewWire(final PeerWire peerWire) {
-                        emitWire(peerWire);
-                    }
-                })
+                .childHandler(channelInitializer)
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 

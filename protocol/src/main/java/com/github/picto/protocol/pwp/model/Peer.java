@@ -1,5 +1,7 @@
 package com.github.picto.protocol.pwp.model;
 
+import com.github.picto.network.pwp.PeerWire;
+
 import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -20,11 +22,27 @@ public class Peer {
     private boolean chokingUs;
     private boolean interestedInUs;
 
+    private PeerWire peerWire;
+
     public Peer() {
         chokedByUs = true;
         interestingForUs = false;
         chokingUs = true;
         interestedInUs = false;
+    }
+
+    public Peer(final PeerWire peerWire) {
+        this();
+        this.peerWire = peerWire;
+        this.host = peerWire.getHost();
+    }
+
+    public void setPeerWire(PeerWire peerWire) {
+        this.peerWire = peerWire;
+    }
+
+    public PeerWire getPeerWire() {
+        return peerWire;
     }
 
     public InetAddress getHost() {

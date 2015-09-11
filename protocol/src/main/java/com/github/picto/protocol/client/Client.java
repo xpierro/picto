@@ -9,15 +9,23 @@ import com.github.picto.bencode.type.BEncodeableDictionary;
 import com.github.picto.bencode.type.BEncodeableType;
 import com.github.picto.network.http.GetExecutor;
 import com.github.picto.network.http.event.HttpResponseReceivedEvent;
+import com.github.picto.network.pwp.PeerWire;
+import com.github.picto.network.pwp.TcpSender;
+import com.github.picto.network.pwp.event.NewPeerWireEvent;
+import com.github.picto.network.pwp.message.PwpHandshakeMessage;
+import com.github.picto.protocol.event.MaxConnectionsChangedEvent;
 import com.github.picto.protocol.event.MetaInfoLoadedEvent;
+import com.github.picto.protocol.event.NewConnectedPeerEvent;
 import com.github.picto.protocol.event.PeerListChangedEvent;
 import com.github.picto.protocol.metainfo.model.MetaInfo;
 import com.github.picto.protocol.pwp.model.Peer;
 import com.github.picto.protocol.thp.exception.THPRequestException;
 import com.github.picto.protocol.thp.model.ThpAnnounceEvent;
 import com.github.picto.protocol.thp.model.TrackerAnnounceResponseModel;
+import com.github.picto.protocol.thp.model.peerid.PeerId;
 import com.github.picto.protocol.thp.model.peerid.StaticPeerId;
 import com.github.picto.protocol.thp.request.AnnounceGet;
+import com.github.picto.util.Hasher;
 import com.github.picto.util.exception.HashException;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -25,6 +33,7 @@ import com.google.inject.Inject;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.*;
 import java.util.logging.Level;
@@ -37,10 +46,15 @@ import java.util.logging.Logger;
  */
 public class Client {
 
+    private static final int DEFAULT_MAX_CONNECTION = 50;
+
     private EventBus eventBus;
 
     @Inject
     private GetExecutor getExecutor;
+
+    @Inject
+    private TcpSender tcpSender;
 
     public static enum PieceStatus {
         DO_NOT_HAVE,
@@ -61,24 +75,38 @@ public class Client {
     private Optional<Integer> listenPort;
 
     /**
+     * The client peerId
+     */
+    private PeerId peerId;
+
+    /**
      * The status for each piece.
      */
     private PieceStatus[] piecesStatus;
 
-    private final Set<Peer> peers;
+    private final Map<InetAddress, Peer> peers;
 
     private int announceInterval = 0;
     private ThpAnnounceEvent currentAnnounceEvent = ThpAnnounceEvent.STARTED;
     private int seedersNb = 0;
     private int leechersNb = 0;
 
+    /**
+     * The maximum number of allowed connections. 50 by default.
+     */
+    private int maxConnections;
+
     //TODO: inject a DateUtil.currentDate for testability
     private Date lastAnnounce = new Date();
 
     @Inject
     public Client(EventBus eventBus) {
-        this.peers = new HashSet<>();
+        this.peers = new HashMap<>();
         listenPort = Optional.empty();
+
+        maxConnections = DEFAULT_MAX_CONNECTION;
+
+        peerId = StaticPeerId.DEFAULT;
 
         this.eventBus = eventBus;
         eventBus.register(this);
@@ -89,8 +117,8 @@ public class Client {
     }
 
     // TODO: verify that the set is indeed allowing us to maintain existing peers.
-    public Set<Peer> getPeers() {
-        return peers;
+    public Collection<Peer> getPeers() {
+        return peers.values();
     }
 
     // Client lifecycle
@@ -166,18 +194,61 @@ public class Client {
             //TODO: testability
             lastAnnounce = new Date();
 
-            peers.addAll(response.getPeers());
+            // Some peers might have already been stored, we don't want to erase them as they have wires opened
+            response.getPeers().stream().filter(peer -> !peers.containsKey(peer.getHost())).forEach(peer -> {
+                peers.put(peer.getHost(), peer);
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "A new peer information has been received from the tracker: " + peer);
+            });
 
             //TODO: make a better message
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "The peer list has been refreshed for the client");
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "The peer list has been refreshed.");
             firePeerListChanged();
         }
-
-
     }
 
     private void firePeerListChanged() {
         eventBus.post(new PeerListChangedEvent());
+    }
+
+    public void setMaxConnections(final int maxConnections) {
+        if (maxConnections == 0) {
+            throw new IllegalStateException("Cannot connect to 0 peers");
+        }
+        this.maxConnections = maxConnections;
+        fireMaxConnectionsChanged();
+    }
+
+    private void fireMaxConnectionsChanged() {
+        eventBus.post(new MaxConnectionsChangedEvent());
+    }
+
+    public void connectToPeer(final Peer peer) throws HashException {
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Attempting to connect to " + peer);
+        tcpSender.sendHandshake(
+                peer.getHost(),
+                peer.getPort(),
+                new PwpHandshakeMessage()
+                        .infoHash(Hasher.sha1(metaInfo.getInformation().getBEncodeableDictionary().getBEncodedBytes()))
+                        .peerId(peerId.getPeerIdBytes())
+        );
+    }
+
+    @Subscribe
+    public void handleNewPeerWire(final NewPeerWireEvent peerWireEvent) {
+        final PeerWire peerWire = peerWireEvent.getPeerWire();
+
+        // We erase any old peer information from that host.
+        InetAddress peerAddress = peerWire.getHost();
+        if (peers.containsKey(peerAddress)) {
+            peers.get(peerAddress).setPeerWire(peerWire);
+        } else {
+            peers.put(peerAddress, new Peer(peerWire));
+        }
+        fireNewConnectedPeer();
+    }
+
+    private void fireNewConnectedPeer() {
+        eventBus.post(new NewConnectedPeerEvent());
     }
 
     private void prioritizePieces() {

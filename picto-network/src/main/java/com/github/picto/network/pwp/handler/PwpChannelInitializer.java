@@ -1,6 +1,10 @@
 package com.github.picto.network.pwp.handler;
 
 import com.github.picto.network.pwp.PeerWire;
+import com.github.picto.network.pwp.event.NewPeerWireEvent;
+import com.google.common.eventbus.EventBus;
+import com.google.inject.Inject;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -11,7 +15,10 @@ import io.netty.handler.codec.bytes.ByteArrayEncoder;
  * Initializes a socket channel.
  * Created by Pierre on 05/09/15.
  */
-public abstract class PwpChannelInitializer extends ChannelInitializer<SocketChannel> {
+public class PwpChannelInitializer extends ChannelInitializer<SocketChannel> {
+
+    @Inject
+    private EventBus eventBus;
 
     public PwpChannelInitializer() {
 
@@ -25,20 +32,23 @@ public abstract class PwpChannelInitializer extends ChannelInitializer<SocketCha
      */
     @Override
     public void initChannel(final SocketChannel ch) throws Exception {
-        ChannelPipeline pipeline = ch.pipeline();
 
+        ChannelPipeline pipeline = ch.pipeline();
         PeerWire peerWire = new PeerWire(ch);
 
-        pipeline.addLast(new PwpHandshakeDecoder());
+        pipeline.addLast(new PwpHandshakeDecoder() {
+            @Override
+            public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                super.channelActive(ctx);
+
+                eventBus.post(new NewPeerWireEvent(peerWire));
+            }
+        });
 
         pipeline.addLast(new ByteArrayDecoder());
 
         pipeline.addLast(new PwpChannelHandler(peerWire));
-
         pipeline.addLast(new ByteArrayEncoder());
 
-        onNewWire(peerWire);
     }
-
-    public abstract void onNewWire(final PeerWire peerWire);
 }
