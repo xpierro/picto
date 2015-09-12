@@ -13,17 +13,22 @@ public class HaveMessage extends AbstractMessage implements Message {
 
     public HaveMessage(byte[] bytes) {
         super(bytes);
+        pieceIndex = ByteArrayUtils.byteArrayToInteger(bytes);
     }
 
     public HaveMessage(int pieceIndex) {
         super();
 
-        bytes = new byte[MESSAGE_LENGTH];
-        bytes[0] = MessageType.HAVE.getId();
-        System.arraycopy(ByteArrayUtils.integerToByteArray(pieceIndex), 0, bytes, 1, 4);
+        payload = new byte[MESSAGE_LENGTH];
+        payload[0] = MessageType.HAVE.getId();
+        System.arraycopy(ByteArrayUtils.integerToByteArray(pieceIndex), 0, payload, 1, 4);
+        this.pieceIndex = pieceIndex;
 
     }
 
+    public int getPieceIndex() {
+        return pieceIndex;
+    }
 
     @Override
     public MessageType getType() {

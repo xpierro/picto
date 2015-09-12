@@ -70,6 +70,11 @@ public class MetaInfoInformation extends AbstractBEncodedDictionary implements I
         System.arraycopy(pieceHash, 0, pieceHashes, index, PIECE_HASH_SIZE);
     }
 
+    @Override
+    public int getPieceCount() {
+        return pieceHashes.length;
+    }
+
     //TODO: unserializer has to understand is is also a getter
     @BEncodeInteger(name = "private")
     @Override

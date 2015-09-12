@@ -7,18 +7,17 @@ import com.github.picto.network.pwp.exception.CannotReadMessageException;
  */
 public abstract class AbstractMessage implements Message {
 
-    protected byte[] bytes;
-    protected MessageType messageType;
+    protected byte[] payload;
 
-    public AbstractMessage(byte[] bytes) {
-        this.bytes = bytes;
+    public AbstractMessage(byte[] payload) {
+        this.payload = payload;
     }
 
-    public AbstractMessage(byte[] bytes, int expectedLength) throws CannotReadMessageException {
-        if (bytes.length != expectedLength) {
-            throw new CannotReadMessageException("Impossible to read message of type " + messageType + " as it's different from the expected length of " + expectedLength + " (" + bytes.length + ")");
+    public AbstractMessage(byte[] payload, int expectedLength) throws CannotReadMessageException {
+        if (payload.length != expectedLength) {
+            throw new CannotReadMessageException("Impossible to read message of type " + getType() + " as it's different from the expected length of " + expectedLength + " (" + payload.length + ")");
         }
-        this.bytes = bytes;
+        this.payload = payload;
     }
 
     protected AbstractMessage() {
@@ -27,7 +26,7 @@ public abstract class AbstractMessage implements Message {
 
     @Override
     public byte[] getRawBytes() {
-        return bytes;
+        return payload;
     }
 
 }

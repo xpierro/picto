@@ -22,6 +22,7 @@ import com.google.inject.Injector;
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -167,22 +168,20 @@ public class ClientTest {
 
         Peer testedPeer = peers.iterator().next();
 
-        testStatusMessageType(testedPeer, MessageType.CHOKE, new ChokeMessage(new byte[1]));
+        testMessageType(testedPeer, MessageType.CHOKE, new ChokeMessage(new byte[1]));
         assertTrue(testedPeer.isChokingUs());
 
-        testStatusMessageType(testedPeer, MessageType.UNCHOKE, new UnChokeMessage(new byte[1]));
+        testMessageType(testedPeer, MessageType.UNCHOKE, new UnChokeMessage(new byte[1]));
         assertFalse(testedPeer.isChokingUs());
 
-        testStatusMessageType(testedPeer, MessageType.INTERESTED, new InterestedMessage(new byte[1]));
+        testMessageType(testedPeer, MessageType.INTERESTED, new InterestedMessage(new byte[1]));
         assertTrue(testedPeer.isInterestedInUs());
 
-        testStatusMessageType(testedPeer, MessageType.NOT_INTERESTED, new NotInterestedMessage(new byte[1]));
+        testMessageType(testedPeer, MessageType.NOT_INTERESTED, new NotInterestedMessage(new byte[1]));
         assertFalse(testedPeer.isInterestedInUs());
-
-
     }
 
-    private void testStatusMessageType(final Peer testedPeer, final MessageType messageType, Message message) throws InterruptedException {
+    private void testMessageType(final Peer testedPeer, final MessageType messageType, Message message) throws InterruptedException {
         expectedMessageType = messageType;
         expectedMessageReceived = false;
         lock = new CountDownLatch(1);
@@ -195,11 +194,117 @@ public class ClientTest {
 
     private MessageType expectedMessageType;
 
+    private Message lastReceivedMessage;
+
     @Subscribe
     public void handleMessageReceived(PeerMessageReceivedEvent event) {
         assertEquals(expectedMessageType, event.getMessage().getType());
         expectedMessageReceived = true;
         lock.countDown();
+    }
+
+    @Test
+    public void peerShouldRefreshPeerIdAfterHandshake() throws InterruptedException, CannotReadMessageException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+        lock = new CountDownLatch(2);
+        initGuice();
+        initEventBus();
+        initTorrentStream();
+        initClient();
+
+        client.loadMetaInfo(torrentStream);
+        client.refreshPeerList();
+
+        System.out.println("Refreshing peer list");
+        lock.await(30, TimeUnit.SECONDS);
+        assertNotNull(peers);
+        assertFalse(peers.isEmpty());
+
+        Peer testedPeer = peers.iterator().next();
+
+        expectedMessageReceived = false;
+        expectedMessageType = MessageType.HANDSHAKE;
+        lock = new CountDownLatch(2);
+        testedPeer.connect();
+        lock.await(30, TimeUnit.SECONDS);
+        assertTrue(testedPeer.getPeerId() != null);
+        System.out.println("Received peer : " + testedPeer);
+    }
+
+    @Test
+    public void peerShouldHaveConsistentPieceCount() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+        lock = new CountDownLatch(2);
+        initGuice();
+        initEventBus();
+        initTorrentStream();
+        initClient();
+
+        client.loadMetaInfo(torrentStream);
+        client.refreshPeerList();
+
+        System.out.println("Refreshing peer list");
+        lock.await(30, TimeUnit.SECONDS);
+        assertNotNull(peers);
+        assertFalse(peers.isEmpty());
+
+        Peer testedPeer = peers.iterator().next();
+
+        expectedMessageReceived = false;
+        expectedMessageType = MessageType.HANDSHAKE;
+        lock = new CountDownLatch(2);
+        testedPeer.connect();
+        lock.await(30, TimeUnit.SECONDS);
+        assertTrue(testedPeer.getPeerId() != null);
+        assertEquals(metaInfo.getInformation().getPieceCount(), testedPeer.getExpectedPieceCount());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void peerShouldReadBitField() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+        lock = new CountDownLatch(2);
+        initGuice();
+        initEventBus();
+        initTorrentStream();
+        initClient();
+
+        client.loadMetaInfo(torrentStream);
+        client.refreshPeerList();
+
+        System.out.println("Refreshing peer list");
+        lock.await(30, TimeUnit.SECONDS);
+        assertNotNull(peers);
+        assertFalse(peers.isEmpty());
+
+        Peer testedPeer = peers.iterator().next();
+
+        byte[] payload = new byte[metaInfo.getInformation().getPieceCount()];
+        Arrays.fill(payload, (byte) 0xFF);
+        testMessageType(testedPeer, MessageType.BITFIELD, new BitFieldMessage(payload));
+        assertTrue(testedPeer.isSeeder());
+
+        Arrays.fill(payload, (byte) 0);
+        testMessageType(testedPeer, MessageType.BITFIELD, new BitFieldMessage(payload));
+    }
+
+    @Test
+    public void peerShouldReadHave() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+        lock = new CountDownLatch(2);
+        initGuice();
+        initEventBus();
+        initTorrentStream();
+        initClient();
+
+        client.loadMetaInfo(torrentStream);
+        client.refreshPeerList();
+
+        System.out.println("Refreshing peer list");
+        lock.await(30, TimeUnit.SECONDS);
+        assertNotNull(peers);
+        assertFalse(peers.isEmpty());
+
+        Peer testedPeer = peers.iterator().next();
+
+        testMessageType(testedPeer, MessageType.HAVE, new HaveMessage(42));
+        assertFalse(testedPeer.isSeeder());
+        assertTrue(testedPeer.havePiece(42));
     }
 
 }

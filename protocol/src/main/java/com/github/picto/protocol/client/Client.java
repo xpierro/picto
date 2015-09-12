@@ -200,6 +200,8 @@ public class Client {
 
             // Some peers might have already been stored, we don't want to erase them as they have wires opened
             response.getPeers(peerProvider).stream().filter(peer -> !peers.containsKey(peer.getHost())).forEach(peer -> {
+                // TODO: This initialization is awkward, make it better. Injecting the meta info in the client scope could be an idea.
+                peer.setExpectedPieceCount(metaInfo.getInformation().getPieceCount());
                 peers.put(peer.getHost(), peer);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "A new peer information has been received from the tracker: " + peer);
             });
@@ -214,6 +216,11 @@ public class Client {
         eventBus.post(new PeerListChangedEvent());
     }
 
+    /**
+     * Change the number of authorized connections for this client.
+     * Default is 50.
+     * @param maxConnections The new limit of connections that can be opened by this client. Has to be superior to 0.
+     */
     public void setMaxConnections(final int maxConnections) {
         if (maxConnections == 0) {
             throw new IllegalStateException("Cannot connect to 0 peers");
@@ -228,10 +235,7 @@ public class Client {
 
     public void connectToPeer(final Peer peer) throws HashException {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Attempting to connect to " + peer);
-        tcpConnecter.connect(
-                peer.getHost(),
-                peer.getPort()
-        );
+        peer.connect();
     }
 
     @Subscribe

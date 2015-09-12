@@ -23,6 +23,16 @@ public class ByteArrayUtils {
                 (byte)value};
     }
 
+    public static int byteArrayToInteger(byte[] bytes) {
+        if (bytes.length != 4) {
+            throw new IllegalStateException("Impossible to create an integer from " + bytes.length + " bytes.");
+        }
+        return   bytes[3] & 0xFF |
+                (bytes[2] & 0xFF) << 8 |
+                (bytes[1] & 0xFF) << 16 |
+                (bytes[0] & 0xFF) << 24;
+    }
+
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];

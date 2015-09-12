@@ -44,6 +44,12 @@ public interface IMetaInfoInformation extends BEncodedDictionary {
     void setPieceHash(final int pieceIndex, final byte[] pieceHash);
 
     /**
+     * Gets the number of expected pieces in the torrent file.
+     * @return An integer counting the number of pieces should be available.
+     */
+    int getPieceCount();
+
+    /**
      * Indicates if a torrent is from a private tracker.
      * @return True if the torrent must block all out-of-tracker peer exchange.
      */
