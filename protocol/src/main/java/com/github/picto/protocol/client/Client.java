@@ -30,6 +30,7 @@ import com.github.picto.util.exception.HashException;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -55,6 +56,9 @@ public class Client {
 
     @Inject
     private TcpConnecter tcpConnecter;
+
+    @Inject
+    private Provider<Peer> peerProvider;
 
     public static enum PieceStatus {
         DO_NOT_HAVE,
@@ -195,7 +199,7 @@ public class Client {
             lastAnnounce = new Date();
 
             // Some peers might have already been stored, we don't want to erase them as they have wires opened
-            response.getPeers().stream().filter(peer -> !peers.containsKey(peer.getHost())).forEach(peer -> {
+            response.getPeers(peerProvider).stream().filter(peer -> !peers.containsKey(peer.getHost())).forEach(peer -> {
                 peers.put(peer.getHost(), peer);
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, "A new peer information has been received from the tracker: " + peer);
             });
@@ -241,7 +245,8 @@ public class Client {
             peer = peers.get(peerAddress);
             peer.setPeerWire(peerWire);
         } else {
-            peer = new Peer(peerWire);
+            peer = peerProvider.get();
+            peer.setPeerWire(peerWire);
             peers.put(peerAddress, peer);
         }
         fireNewConnectedPeer(peer);

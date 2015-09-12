@@ -16,7 +16,7 @@ public abstract class AbstractMessage implements Message {
 
     public AbstractMessage(byte[] bytes, int expectedLength) throws CannotReadMessageException {
         if (bytes.length != expectedLength) {
-            throw new CannotReadMessageException("Impossible to read message of type " + messageType + " as it goes beyong the expected length of " + expectedLength + " (" + bytes.length + ")");
+            throw new CannotReadMessageException("Impossible to read message of type " + messageType + " as it's different from the expected length of " + expectedLength + " (" + bytes.length + ")");
         }
         this.bytes = bytes;
     }

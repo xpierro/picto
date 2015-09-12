@@ -20,8 +20,15 @@ public class MessageFactory {
     public static Message getMessage(byte[] bytes) throws CannotReadMessageException {
         Message message;
 
-        byte typeId = bytes[0];
-        MessageType messageType = MessageType.findById(typeId);
+
+        MessageType messageType;
+
+        if (bytes.length == 0) {
+            messageType = MessageType.KEEPALIVE;
+        } else {
+            byte typeId = bytes[0];
+            messageType = MessageType.findById(typeId);
+        }
 
         switch (messageType) {
             case HANDSHAKE:
@@ -56,6 +63,9 @@ public class MessageFactory {
                 break;
             case PORT:
                 message = new PortMessage(bytes);
+                break;
+            case KEEPALIVE:
+                message = new KeepAliveMessage();
                 break;
             default:
                 throw new CannotReadMessageException("Impossible to decode the message type " + messageType);

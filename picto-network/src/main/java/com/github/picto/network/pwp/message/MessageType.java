@@ -21,7 +21,8 @@ public enum MessageType {
     REQUEST(6),
     PIECE(7),
     CANCEL(8),
-    PORT(9);
+    PORT(9),
+    KEEPALIVE(-1);
 
     private static final Map<Byte, MessageType> lookupMap;
 

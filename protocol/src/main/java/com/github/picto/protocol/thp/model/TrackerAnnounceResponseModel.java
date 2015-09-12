@@ -6,6 +6,7 @@ import com.github.picto.bencode.annotation.BEncodeDictionary;
 import com.github.picto.bencode.annotation.BEncodeInteger;
 import com.github.picto.bencode.type.BEncodeableDictionary;
 import com.github.picto.protocol.pwp.model.Peer;
+import com.google.inject.Provider;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -150,7 +151,7 @@ public class TrackerAnnounceResponseModel implements BEncodedDictionary {
      * Get the list of peers on the network sent by the server.
      * @return A list of simple peer objects.
      */
-    public List<Peer> getPeers() {
+    public List<Peer> getPeers(final Provider<Peer> peerProvider) {
         List<Peer> peers = new ArrayList<>();
         if (binaryPeers != null && binaryPeers.length > 0) {
             if (binaryPeers.length % 6 != 0) {
@@ -165,7 +166,7 @@ public class TrackerAnnounceResponseModel implements BEncodedDictionary {
                 port <<= 8;
                 port |= portBytes[1] & 0xFF;
 
-                Peer peer = new Peer();
+                Peer peer = peerProvider.get();
                 try {
                     peer.setHost(InetAddress.getByAddress(ipBytes));
                     peer.setPort(port);

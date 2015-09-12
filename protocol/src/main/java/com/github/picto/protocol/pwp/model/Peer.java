@@ -2,6 +2,10 @@ package com.github.picto.protocol.pwp.model;
 
 import com.github.picto.network.pwp.PeerWire;
 import com.github.picto.network.pwp.message.Message;
+import com.github.picto.protocol.event.PeerMessageReceivedEvent;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 
 import java.net.InetAddress;
 import java.nio.charset.Charset;
@@ -12,6 +16,10 @@ import java.util.Arrays;
  * Created by Pierre on 31/08/15.
  */
 public class Peer {
+
+    @Inject
+    private EventBus eventBus;
+
     private InetAddress host;
     private int port;
 
@@ -32,14 +40,17 @@ public class Peer {
         interestedInUs = false;
     }
 
-    public Peer(final PeerWire peerWire) {
-        this();
-        this.peerWire = peerWire;
-        this.host = peerWire.getHost();
+    private void listenToWire() {
+        if (peerWire == null) {
+            throw new IllegalStateException("Cannot register on an unexisting peer wire.");
+        }
+        peerWire.listenToWire(this);
     }
 
     public void setPeerWire(PeerWire peerWire) {
         this.peerWire = peerWire;
+        this.host = peerWire.getHost();
+        listenToWire();
     }
 
     public PeerWire getPeerWire() {
@@ -104,6 +115,26 @@ public class Peer {
 
     public void sendMessage(final Message message) {
         peerWire.sendMessage(message);
+    }
+
+    @Subscribe
+    public void messageReceived(final Message message) {
+        switch (message.getType()) {
+            case CHOKE:
+                setChokingUs(true);
+                break;
+            case UNCHOKE:
+                setChokingUs(false);
+                break;
+            case INTERESTED:
+                setInterestedInUs(true);
+                break;
+            case NOT_INTERESTED:
+                setInterestedInUs(false);
+                break;
+        }
+
+        eventBus.post(new PeerMessageReceivedEvent(this, message));
     }
 
     @Override

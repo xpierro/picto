@@ -22,9 +22,10 @@ public class PwpChannelHandler extends SimpleChannelInboundHandler<byte[]> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, byte[] msg) throws Exception {
         if (msg.length == 0) {
+            //TODO: should we handle that on a higher level ?
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "A keep-alive message has been received");
         } else {
-            peerWire.emitMessage(MessageFactory.getMessage(msg));
+            peerWire.onMessageReceived(MessageFactory.getMessage(msg));
         }
     }
 }

@@ -4,10 +4,13 @@ import com.github.picto.bencode.exception.CannotReadBencodedException;
 import com.github.picto.bencode.exception.CannotReadTokenException;
 import com.github.picto.bencode.exception.CannotUnserializeException;
 import com.github.picto.module.ProtocolModule;
+import com.github.picto.network.pwp.exception.CannotReadMessageException;
+import com.github.picto.network.pwp.message.*;
 import com.github.picto.protocol.client.Client;
 import com.github.picto.protocol.event.MetaInfoLoadedEvent;
 import com.github.picto.protocol.event.NewConnectedPeerEvent;
 import com.github.picto.protocol.event.PeerListChangedEvent;
+import com.github.picto.protocol.event.PeerMessageReceivedEvent;
 import com.github.picto.protocol.metainfo.model.MetaInfo;
 import com.github.picto.protocol.pwp.model.Peer;
 import com.github.picto.protocol.thp.exception.THPRequestException;
@@ -144,6 +147,59 @@ public class ClientTest {
 
         assertNotNull(testedPeer.getPeerWire());
         System.out.println("A new peerwire has been created for " + peers);
+    }
+
+    @Test
+    public void peerShouldTransmitEvent() throws InterruptedException, CannotReadMessageException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+        lock = new CountDownLatch(2);
+        initGuice();
+        initEventBus();
+        initTorrentStream();
+        initClient();
+
+        client.loadMetaInfo(torrentStream);
+        client.refreshPeerList();
+
+        System.out.println("Refreshing peer list");
+        lock.await(30, TimeUnit.SECONDS);
+        assertNotNull(peers);
+        assertFalse(peers.isEmpty());
+
+        Peer testedPeer = peers.iterator().next();
+
+        testStatusMessageType(testedPeer, MessageType.CHOKE, new ChokeMessage(new byte[1]));
+        assertTrue(testedPeer.isChokingUs());
+
+        testStatusMessageType(testedPeer, MessageType.UNCHOKE, new UnChokeMessage(new byte[1]));
+        assertFalse(testedPeer.isChokingUs());
+
+        testStatusMessageType(testedPeer, MessageType.INTERESTED, new InterestedMessage(new byte[1]));
+        assertTrue(testedPeer.isInterestedInUs());
+
+        testStatusMessageType(testedPeer, MessageType.NOT_INTERESTED, new NotInterestedMessage(new byte[1]));
+        assertFalse(testedPeer.isInterestedInUs());
+
+
+    }
+
+    private void testStatusMessageType(final Peer testedPeer, final MessageType messageType, Message message) throws InterruptedException {
+        expectedMessageType = messageType;
+        expectedMessageReceived = false;
+        lock = new CountDownLatch(1);
+        testedPeer.messageReceived(message);
+        lock.await(30, TimeUnit.SECONDS);
+        assertTrue(expectedMessageReceived);
+    }
+
+    private boolean expectedMessageReceived;
+
+    private MessageType expectedMessageType;
+
+    @Subscribe
+    public void handleMessageReceived(PeerMessageReceivedEvent event) {
+        assertEquals(expectedMessageType, event.getMessage().getType());
+        expectedMessageReceived = true;
+        lock.countDown();
     }
 
 }
