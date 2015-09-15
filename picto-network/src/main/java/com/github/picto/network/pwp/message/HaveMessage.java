@@ -1,6 +1,9 @@
 package com.github.picto.network.pwp.message;
 
+import com.github.picto.network.pwp.exception.CannotReadMessageException;
 import com.github.picto.util.ByteArrayUtils;
+
+import java.util.Arrays;
 
 /**
  * Created by Pierre on 06/09/15.
@@ -11,9 +14,9 @@ public class HaveMessage extends AbstractMessage implements Message {
 
     private int pieceIndex;
 
-    public HaveMessage(byte[] bytes) {
-        super(bytes);
-        pieceIndex = ByteArrayUtils.byteArrayToInteger(bytes);
+    public HaveMessage(byte[] bytes) throws CannotReadMessageException {
+        super(bytes, MESSAGE_LENGTH);
+        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(bytes, 1, 4));
     }
 
     public HaveMessage(int pieceIndex) {

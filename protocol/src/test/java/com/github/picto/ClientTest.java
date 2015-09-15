@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -198,9 +199,11 @@ public class ClientTest {
 
     @Subscribe
     public void handleMessageReceived(PeerMessageReceivedEvent event) {
-        assertEquals(expectedMessageType, event.getMessage().getType());
-        expectedMessageReceived = true;
-        lock.countDown();
+        if (expectedMessageType != null) {
+            assertEquals(expectedMessageType, event.getMessage().getType());
+            expectedMessageReceived = true;
+            lock.countDown();
+        }
     }
 
     @Test
@@ -306,5 +309,48 @@ public class ClientTest {
         assertFalse(testedPeer.isSeeder());
         assertTrue(testedPeer.hasPiece(42));
     }
+
+    @Test
+    public void peerShouldDownloadBlock() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+        lock = new CountDownLatch(2);
+        initGuice();
+        initEventBus();
+        initTorrentStream();
+        initClient();
+
+        client.loadMetaInfo(torrentStream);
+        client.refreshPeerList();
+
+        System.out.println("Refreshing peer list");
+        lock.await(30, TimeUnit.SECONDS);
+        assertNotNull(peers);
+        assertFalse(peers.isEmpty());
+
+        Peer testedPeer = peers.iterator().next();
+        testedPeer.connect();
+
+        // We have to wait for a while until the peer has been connected to and initialized
+        Thread.sleep(15000);
+        // We test if the peer has some pieces
+        BitSet havePieces = testedPeer.getAvailablePieces();
+        assertNotEquals(0, havePieces.cardinality());
+
+        // We request the first available piece
+        int pieceIndex = havePieces.nextSetBit(0);
+        assertTrue(pieceIndex >= 0);
+
+        expectedMessageType = MessageType.PIECE;
+        expectedMessageReceived = false;
+        lock = new CountDownLatch(1);
+        testedPeer.setInterestingForUs(true);
+        testedPeer.setChokedByUs(false);
+        testedPeer.requestPieceBlock(pieceIndex, 0);
+        // Now that the piece has been requested we need to wait for a block message
+        lock.await();
+        assertTrue(expectedMessageReceived);
+
+    }
+
+
 
 }

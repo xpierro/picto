@@ -19,6 +19,7 @@ import com.github.picto.protocol.event.NewConnectedPeerEvent;
 import com.github.picto.protocol.event.PeerListChangedEvent;
 import com.github.picto.protocol.metainfo.model.MetaInfo;
 import com.github.picto.protocol.pwp.model.Peer;
+import com.github.picto.protocol.pwp.model.Piece;
 import com.github.picto.protocol.thp.exception.THPRequestException;
 import com.github.picto.protocol.thp.model.ThpAnnounceEvent;
 import com.github.picto.protocol.thp.model.TrackerAnnounceResponseModel;
@@ -61,10 +62,15 @@ public class Client {
     private Provider<Peer> peerProvider;
 
     public static enum PieceStatus {
+        // The piece isnt present and hasn't been downloaded at all.
         DO_NOT_HAVE,
+        // We have the piece
         HAVE,
+        // The piece has started being requested but no download have been launched
         REQUESTED,
+        // The hash value of the piece is wrong. This piece should be re-downloaded.
         CORRUPTED,
+        // The piece is partially downloaded.
         DOWNLOADING
     }
 
@@ -85,8 +91,16 @@ public class Client {
 
     /**
      * The status for each piece.
+     * TODO: should we use a bitset per status to do binary operation easily ? Eg: how do we know pieces clients have that we don't ?
      */
     private PieceStatus[] piecesStatus;
+
+    /**
+     * Pieces that have been loaded in memory either for download or upload.
+     * Downloading pieces should be flushed to file system as soon as downloaded, while transferring pieces should
+     * be pruned when a certain delay has passed since they've been requested last.
+     */
+    private Map<Integer, Piece> inMemoryPieces;
 
     private final Map<InetAddress, Peer> peers;
 
@@ -144,6 +158,9 @@ public class Client {
 
         BEncodeUnserializer<MetaInfo> unserializer = new BEncodeUnserializer<>(dictionary, MetaInfo.class);
         metaInfo = unserializer.unserialize();
+
+        piecesStatus = new PieceStatus[metaInfo.getInformation().getPieceCount()];
+        Arrays.fill(piecesStatus, PieceStatus.DO_NOT_HAVE);
 
         fireMetaInfoLoaded();
     }

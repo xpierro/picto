@@ -3,6 +3,7 @@ package com.github.picto.network.pwp.message;
 import com.github.picto.network.pwp.exception.CannotReadMessageException;
 
 /**
+ * TODO: maybe segment the message between payload and id to simplify concatenation everywhere.
  * Created by Pierre on 06/09/15.
  */
 public abstract class AbstractMessage implements Message {

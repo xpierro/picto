@@ -41,7 +41,7 @@ public class PeerWire {
     }
 
     public void sendMessage(final Message message) {
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Sending a new message of type " + message.getType());
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Sending a new message of type " + message.getType() + " (" + message + " )");
         byte[] bytes = message.getRawBytes();
         try {
             // TODO: do we need to synchronize here

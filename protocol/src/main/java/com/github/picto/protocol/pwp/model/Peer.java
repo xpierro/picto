@@ -2,10 +2,7 @@ package com.github.picto.protocol.pwp.model;
 
 import com.github.picto.network.pwp.PeerWire;
 import com.github.picto.network.pwp.TcpConnecter;
-import com.github.picto.network.pwp.message.BitFieldMessage;
-import com.github.picto.network.pwp.message.HaveMessage;
-import com.github.picto.network.pwp.message.Message;
-import com.github.picto.network.pwp.message.PwpHandshakeMessage;
+import com.github.picto.network.pwp.message.*;
 import com.github.picto.protocol.event.PeerMessageReceivedEvent;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -15,6 +12,8 @@ import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Represents a peer on the network.
@@ -89,8 +88,6 @@ public class Peer {
         }
         return havePieces.get(pieceIndex);
     }
-
-
 
     public boolean isSeeder() {
         return expectedPieceCount > 0 && havePieces.cardinality() == expectedPieceCount;
@@ -167,6 +164,10 @@ public class Peer {
         this.interestedInUs = interestedInUs;
     }
 
+    public BitSet getAvailablePieces() {
+        return havePieces;
+    }
+
     public void sendMessage(final Message message) {
         peerWire.sendMessage(message);
     }
@@ -190,11 +191,10 @@ public class Peer {
                 this.peerId = ((PwpHandshakeMessage) message).getPeerId();
                 break;
             case BITFIELD:
+                // TODO: test in a proper way if the message has been received correctly.
                 BitFieldMessage bitFieldMessage = (BitFieldMessage) message;
-                if (havePieces != null) {
-                    throw new IllegalStateException("A bitfield message has been received after the piece status has been set.");
-                }
                 havePieces = bitFieldMessage.getBitSet();
+
                 break;
             case HAVE:
                 HaveMessage haveMessage = (HaveMessage) message;
@@ -211,6 +211,22 @@ public class Peer {
                 getHost(),
                 getPort()
         );
+    }
+
+    /**
+     * Request a piece block from the peer.
+     * //TODO: should one peer always provide one full piece at a time ? Or can we use a block granularity ?
+     * @param pieceIndex
+     * @param blockOffset
+     * @param blockLength Unused for now as we use a default value.
+     */
+    public void requestPieceBlock(final int pieceIndex, final int blockOffset) {
+        if (isChokedByUs() || isChokingUs() || !isInterestingForUs() || !hasPiece(pieceIndex)) {
+            throw new IllegalStateException("This peer is unavailable for piece requests.");
+        }
+
+        RequestMessage requestMessage = new RequestMessage(pieceIndex, blockOffset, Piece.DEFAULT_SIZE);
+        peerWire.sendMessage(requestMessage);
     }
 
     @Override
