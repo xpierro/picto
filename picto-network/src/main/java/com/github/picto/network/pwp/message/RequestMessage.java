@@ -37,9 +37,9 @@ public class RequestMessage extends AbstractMessage implements Message {
     }
 
     private void readPayload() {
-        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 1, 4));
-        blockOffset = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 5, 4));
-        length = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 9, 4));
+        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 1, 5));
+        blockOffset = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 5, 9));
+        length = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 9, 13));
     }
 
     @Override

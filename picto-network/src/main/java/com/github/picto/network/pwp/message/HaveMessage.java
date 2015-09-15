@@ -16,7 +16,7 @@ public class HaveMessage extends AbstractMessage implements Message {
 
     public HaveMessage(byte[] bytes) throws CannotReadMessageException {
         super(bytes, MESSAGE_LENGTH);
-        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(bytes, 1, 4));
+        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(bytes, 1, 5));
     }
 
     public HaveMessage(int pieceIndex) {

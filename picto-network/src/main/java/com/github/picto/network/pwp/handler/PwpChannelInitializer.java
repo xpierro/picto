@@ -36,7 +36,7 @@ public class PwpChannelInitializer extends ChannelInitializer<SocketChannel> {
         ChannelPipeline pipeline = ch.pipeline();
         PeerWire peerWire = new PeerWire(ch);
 
-        pipeline.addLast(new PwpHandshakeDecoder() {
+        pipeline.addLast("handshakeDecoder", new PwpHandshakeDecoder() {
             @Override
             public void channelActive(ChannelHandlerContext ctx) throws Exception {
                 super.channelActive(ctx);

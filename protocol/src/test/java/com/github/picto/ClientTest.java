@@ -197,11 +197,17 @@ public class ClientTest {
 
     private Message lastReceivedMessage;
 
+    private boolean atLastOneExpected = false;
+
     @Subscribe
     public void handleMessageReceived(PeerMessageReceivedEvent event) {
         if (expectedMessageType != null) {
-            assertEquals(expectedMessageType, event.getMessage().getType());
-            expectedMessageReceived = true;
+            if (!atLastOneExpected) {
+                assertEquals(expectedMessageType, event.getMessage().getType());
+                expectedMessageReceived = true;
+            } else {
+                expectedMessageReceived = event.getMessage().getType() == expectedMessageType;
+            }
             lock.countDown();
         }
     }
@@ -326,25 +332,38 @@ public class ClientTest {
         assertNotNull(peers);
         assertFalse(peers.isEmpty());
 
-        Peer testedPeer = peers.iterator().next();
-        testedPeer.connect();
-
-        // We have to wait for a while until the peer has been connected to and initialized
-        Thread.sleep(15000);
-        // We test if the peer has some pieces
-        BitSet havePieces = testedPeer.getAvailablePieces();
-        assertNotEquals(0, havePieces.cardinality());
-
-        // We request the first available piece
-        int pieceIndex = havePieces.nextSetBit(0);
-        assertTrue(pieceIndex >= 0);
-
         expectedMessageType = MessageType.PIECE;
         expectedMessageReceived = false;
+        atLastOneExpected = true;
         lock = new CountDownLatch(1);
-        testedPeer.setInterestingForUs(true);
-        testedPeer.setChokedByUs(false);
-        testedPeer.requestPieceBlock(pieceIndex, 0);
+
+        for (Peer testedPeer : peers) {
+            testedPeer.connect();
+
+            // We have to wait for a while until the peer has been connected to and initialized
+            Thread.sleep(15000);
+            // We test if the peer has some pieces
+            BitSet havePieces = testedPeer.getAvailablePieces();
+
+
+            if (havePieces.cardinality() > 0) {
+                assertNotEquals(0, havePieces.cardinality());
+
+                // We request the first available piece
+                int pieceIndex = havePieces.nextSetBit(0);
+                assertTrue(pieceIndex >= 0);
+
+                // We need to unchoke and signal our interest to the peer first
+                testedPeer.unchoke();
+                testedPeer.interested();
+
+                if (!testedPeer.isChokingUs()) {
+                    // We can now request
+                    testedPeer.requestPieceBlock(pieceIndex, 0);
+                }
+            }
+        }
+
         // Now that the piece has been requested we need to wait for a block message
         lock.await();
         assertTrue(expectedMessageReceived);

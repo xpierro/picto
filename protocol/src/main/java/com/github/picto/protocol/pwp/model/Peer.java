@@ -226,7 +226,23 @@ public class Peer {
         }
 
         RequestMessage requestMessage = new RequestMessage(pieceIndex, blockOffset, Piece.DEFAULT_SIZE);
-        peerWire.sendMessage(requestMessage);
+        sendMessage(requestMessage);
+    }
+
+    /**
+     * Signals to the peer he's unchocked by us.
+     */
+    public void unchoke() {
+        setChokedByUs(false);
+        sendMessage(new UnChokeMessage());
+    }
+
+    /**
+     * Signals to the peer we are interested in him.
+     */
+    public void interested() {
+        setInterestingForUs(true);
+        sendMessage(new InterestedMessage());
     }
 
     @Override

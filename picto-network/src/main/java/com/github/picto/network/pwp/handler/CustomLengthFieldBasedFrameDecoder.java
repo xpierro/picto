@@ -1,12 +1,15 @@
 package com.github.picto.network.pwp.handler;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.*;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 
 import java.nio.ByteOrder;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Pierre on 15/09/15.
@@ -328,6 +331,16 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
         this.failFast = failFast;
     }
 
+    private ByteBuf remainingBytes;
+
+    public CustomLengthFieldBasedFrameDecoder(
+            ByteOrder byteOrder, int maxFrameLength, int lengthFieldOffset, int lengthFieldLength,
+            int lengthAdjustment, int initialBytesToStrip, boolean failFast, ByteBuf remainingBytes) {
+        this(byteOrder, maxFrameLength, lengthFieldOffset, lengthFieldLength, lengthAdjustment, initialBytesToStrip, failFast);
+
+        this.remainingBytes = remainingBytes.duplicate();
+    }
+
     @Override
     protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         Object decoded = decode(ctx, in);
@@ -345,6 +358,16 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
      *                          be created.
      */
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+        if (remainingBytes != null && remainingBytes.readableBytes() > 0) {
+            int remainingBytesLength = remainingBytes.readableBytes();
+            byte[] content = new byte[remainingBytesLength + in.readableBytes()];
+            remainingBytes.readBytes(content, 0, remainingBytesLength);
+            in.readBytes(content, remainingBytesLength, in.readableBytes());
+            in = Unpooled.copiedBuffer(content);
+
+            remainingBytes = null;
+        }
+
         if (discardingTooLongFrame) {
             long bytesToDiscard = this.bytesToDiscard;
             int localBytesToDiscard = (int) Math.min(bytesToDiscard, in.readableBytes());
@@ -359,9 +382,11 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
             return null;
         }
 
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Readable bytes before " + in.readableBytes());
         int actualLengthFieldOffset = in.readerIndex() + lengthFieldOffset;
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Actual field length offset " + actualLengthFieldOffset);
         long frameLength = getUnadjustedFrameLength(in, actualLengthFieldOffset, lengthFieldLength, byteOrder);
-
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Frame length " + frameLength);
         if (frameLength < 0) {
             in.skipBytes(lengthFieldEndOffset);
             throw new CorruptedFrameException(
@@ -369,6 +394,7 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
         }
 
         frameLength += lengthAdjustment + lengthFieldEndOffset;
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Frame length adjusted " + frameLength);
 
         if (frameLength < lengthFieldEndOffset) {
             in.skipBytes(lengthFieldEndOffset);
@@ -377,6 +403,7 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
                             "than lengthFieldEndOffset: " + lengthFieldEndOffset);
         }
 
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Frame length just before test " + frameLength);
         if (frameLength > maxFrameLength) {
             long discard = frameLength - in.readableBytes();
             tooLongFrameLength = frameLength;
@@ -438,7 +465,9 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
                 frameLength = buf.getUnsignedMedium(offset);
                 break;
             case 4:
-                frameLength = buf.getUnsignedInt(offset);
+                int intVersion = buf.getInt(offset);
+                frameLength = intVersion & 0xFFFFFFFFL;
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Calculated frame length : " + frameLength + " and signed version: " + intVersion);
                 break;
             case 8:
                 frameLength = buf.getLong(offset);
