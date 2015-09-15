@@ -83,12 +83,14 @@ public class Peer {
         expectedPieceCount = pieceCount;
     }
 
-    public boolean havePiece(final int pieceIndex) {
+    public boolean hasPiece(final int pieceIndex) {
         if (pieceIndex >= expectedPieceCount) {
             throw new IllegalStateException("The requested piece index is invalid : " + pieceIndex + " (out of " + expectedPieceCount);
         }
         return havePieces.get(pieceIndex);
     }
+
+
 
     public boolean isSeeder() {
         return expectedPieceCount > 0 && havePieces.cardinality() == expectedPieceCount;

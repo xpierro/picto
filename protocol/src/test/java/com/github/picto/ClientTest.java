@@ -304,7 +304,7 @@ public class ClientTest {
 
         testMessageType(testedPeer, MessageType.HAVE, new HaveMessage(42));
         assertFalse(testedPeer.isSeeder());
-        assertTrue(testedPeer.havePiece(42));
+        assertTrue(testedPeer.hasPiece(42));
     }
 
 }
