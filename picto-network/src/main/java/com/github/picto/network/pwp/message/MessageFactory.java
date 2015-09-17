@@ -2,6 +2,7 @@ package com.github.picto.network.pwp.message;
 
 import com.github.picto.network.pwp.exception.CannotReadMessageException;
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,42 +31,45 @@ public class MessageFactory {
             messageType = MessageType.findById(typeId);
         }
 
+        //TODO: is this efficient ?
+        byte[] payload = Arrays.copyOfRange(bytes, 1, bytes.length);
+
         switch (messageType) {
             case HANDSHAKE:
                 message = new PwpHandshakeMessage(bytes);
                 break;
             case CHOKE:
-                message = new ChokeMessage(bytes);
+                message = new ChokeMessage(payload);
                 break;
             case UNCHOKE:
-                message = new UnChokeMessage(bytes);
+                message = new UnChokeMessage(payload);
                 break;
             case INTERESTED:
-                message = new InterestedMessage(bytes);
+                message = new InterestedMessage(payload);
                 break;
             case NOT_INTERESTED:
-                message = new NotInterestedMessage(bytes);
+                message = new NotInterestedMessage(payload);
                 break;
             case HAVE:
-                message = new HaveMessage(bytes);
+                message = new HaveMessage(payload);
                 break;
             case BITFIELD:
-                message = new BitFieldMessage(bytes);
+                message = new BitFieldMessage(payload);
                 break;
             case REQUEST:
-                message = new RequestMessage(bytes);
+                message = new RequestMessage(payload);
                 break;
             case PIECE:
-                message = new PieceMessage(bytes);
+                message = new PieceMessage(payload);
                 break;
             case CANCEL:
-                message = new CancelMessage(bytes);
+                message = new CancelMessage(payload);
                 break;
             case PORT:
-                message = new PortMessage(bytes);
+                message = new PortMessage(payload);
                 break;
             case KEEPALIVE:
-                message = new KeepAliveMessage();
+                message = new KeepAliveMessage(payload);
                 break;
             default:
                 throw new CannotReadMessageException("Impossible to decode the message type " + messageType);

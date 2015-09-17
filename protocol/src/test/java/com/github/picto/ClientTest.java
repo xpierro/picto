@@ -267,7 +267,7 @@ public class ClientTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void peerShouldReadBitField() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+    public void peerShouldReadBitField() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, CannotReadMessageException {
         lock = new CountDownLatch(2);
         initGuice();
         initEventBus();
@@ -317,7 +317,7 @@ public class ClientTest {
     }
 
     @Test
-    public void peerShouldDownloadBlock() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+    public void peerShouldDownloadBlock() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, CannotReadMessageException {
         lock = new CountDownLatch(2);
         initGuice();
         initEventBus();

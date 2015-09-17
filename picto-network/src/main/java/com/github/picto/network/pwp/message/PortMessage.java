@@ -1,11 +1,13 @@
 package com.github.picto.network.pwp.message;
 
+import com.github.picto.network.pwp.exception.CannotReadMessageException;
+
 /**
  * Created by Pierre on 06/09/15.
  */
 public class PortMessage extends AbstractMessage implements Message {
-    public PortMessage(byte[] bytes) {
-        super(bytes);
+    public PortMessage(byte[] payload) throws CannotReadMessageException {
+        super(payload);
     }
 
     @Override

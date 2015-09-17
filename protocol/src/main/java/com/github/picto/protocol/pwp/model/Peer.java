@@ -2,6 +2,7 @@ package com.github.picto.protocol.pwp.model;
 
 import com.github.picto.network.pwp.PeerWire;
 import com.github.picto.network.pwp.TcpConnecter;
+import com.github.picto.network.pwp.exception.CannotReadMessageException;
 import com.github.picto.network.pwp.message.*;
 import com.github.picto.protocol.event.PeerMessageReceivedEvent;
 import com.google.common.eventbus.EventBus;
@@ -232,7 +233,7 @@ public class Peer {
     /**
      * Signals to the peer he's unchocked by us.
      */
-    public void unchoke() {
+    public void unchoke() throws CannotReadMessageException {
         setChokedByUs(false);
         sendMessage(new UnChokeMessage());
     }
@@ -240,7 +241,7 @@ public class Peer {
     /**
      * Signals to the peer we are interested in him.
      */
-    public void interested() {
+    public void interested() throws CannotReadMessageException {
         setInterestingForUs(true);
         sendMessage(new InterestedMessage());
     }

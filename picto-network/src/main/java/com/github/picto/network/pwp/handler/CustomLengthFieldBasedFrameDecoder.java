@@ -8,8 +8,6 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 
 import java.nio.ByteOrder;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Created by Pierre on 15/09/15.
@@ -382,11 +380,8 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
             return null;
         }
 
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Readable bytes before " + in.readableBytes());
         int actualLengthFieldOffset = in.readerIndex() + lengthFieldOffset;
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Actual field length offset " + actualLengthFieldOffset);
         long frameLength = getUnadjustedFrameLength(in, actualLengthFieldOffset, lengthFieldLength, byteOrder);
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Frame length " + frameLength);
         if (frameLength < 0) {
             in.skipBytes(lengthFieldEndOffset);
             throw new CorruptedFrameException(
@@ -394,7 +389,6 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
         }
 
         frameLength += lengthAdjustment + lengthFieldEndOffset;
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Frame length adjusted " + frameLength);
 
         if (frameLength < lengthFieldEndOffset) {
             in.skipBytes(lengthFieldEndOffset);
@@ -403,7 +397,6 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
                             "than lengthFieldEndOffset: " + lengthFieldEndOffset);
         }
 
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Frame length just before test " + frameLength);
         if (frameLength > maxFrameLength) {
             long discard = frameLength - in.readableBytes();
             tooLongFrameLength = frameLength;
@@ -467,7 +460,6 @@ public class CustomLengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
             case 4:
                 int intVersion = buf.getInt(offset);
                 frameLength = intVersion & 0xFFFFFFFFL;
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Calculated frame length : " + frameLength + " and signed version: " + intVersion);
                 break;
             case 8:
                 frameLength = buf.getLong(offset);

@@ -15,4 +15,8 @@ public interface Message {
      * @return
      */
     MessageType getType();
+
+    int getMessageId();
+
+    int getMessageLength();
 }

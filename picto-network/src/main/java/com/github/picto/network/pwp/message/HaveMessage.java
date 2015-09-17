@@ -10,23 +10,27 @@ import java.util.Arrays;
  */
 public class HaveMessage extends AbstractMessage implements Message {
 
-    private static final int MESSAGE_LENGTH = 5;
+    private static final int MESSAGE_LENGTH = 4;
 
     private int pieceIndex;
 
-    public HaveMessage(byte[] bytes) throws CannotReadMessageException {
-        super(bytes, MESSAGE_LENGTH);
-        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(bytes, 1, 5));
+    public HaveMessage(byte[] payload) throws CannotReadMessageException {
+        super(payload, MESSAGE_LENGTH);
+        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 0, MESSAGE_LENGTH));
     }
+
+
 
     public HaveMessage(int pieceIndex) {
         super();
 
-        payload = new byte[MESSAGE_LENGTH];
-        payload[0] = MessageType.HAVE.getId();
-        System.arraycopy(ByteArrayUtils.integerToByteArray(pieceIndex), 0, payload, 1, 4);
         this.pieceIndex = pieceIndex;
+        buildPayload();
+    }
 
+    protected void buildPayload() {
+        payload = new byte[MESSAGE_LENGTH];
+        System.arraycopy(ByteArrayUtils.integerToByteArray(pieceIndex), 0, payload, 0, MESSAGE_LENGTH);
     }
 
     public int getPieceIndex() {

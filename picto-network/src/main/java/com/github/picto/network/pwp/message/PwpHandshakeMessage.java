@@ -55,8 +55,8 @@ public class PwpHandshakeMessage implements Message {
         peerId = new byte[PEER_ID_LENGTH];
     }
 
-    public PwpHandshakeMessage(final byte[] bytes) {
-        fill(bytes);
+    public PwpHandshakeMessage(final byte[] payload) {
+        readPayload(payload);
     }
 
     public PwpHandshakeMessage peerId(byte[] peerId) {
@@ -94,25 +94,35 @@ public class PwpHandshakeMessage implements Message {
         return MessageType.HANDSHAKE;
     }
 
-    // TODO: make a generic version
-    private void fill(byte[] bytes) {
+    @Override
+    public int getMessageId() {
+        return -1;
+    }
 
-        pstrLength = bytes[0];
+    @Override
+    public int getMessageLength() {
+        return 68;
+    }
+
+    // TODO: make a generic version
+    private void readPayload(byte[] payload) {
+
+        pstrLength = payload[0];
         int position = 1;
         pstr = new byte[pstrLength];
-        System.arraycopy(bytes, position, pstr, 0, pstrLength);
+        System.arraycopy(payload, position, pstr, 0, pstrLength);
         position += getPstr().length;
 
         reserved = new byte[8];
-        System.arraycopy(bytes, position, reserved, 0, 8);
+        System.arraycopy(payload, position, reserved, 0, 8);
         position += 8;
 
         infoHash = new byte[INFO_HASH_LENGTH];
-        System.arraycopy(bytes, position, infoHash, 0, INFO_HASH_LENGTH);
+        System.arraycopy(payload, position, infoHash, 0, INFO_HASH_LENGTH);
         position += INFO_HASH_LENGTH;
 
         peerId = new byte[PEER_ID_LENGTH];
-        System.arraycopy(bytes, position, peerId, 0, PEER_ID_LENGTH);
+        System.arraycopy(payload, position, peerId, 0, PEER_ID_LENGTH);
 
     }
 

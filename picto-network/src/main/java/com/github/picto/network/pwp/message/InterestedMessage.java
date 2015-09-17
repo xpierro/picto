@@ -6,15 +6,14 @@ import com.github.picto.network.pwp.exception.CannotReadMessageException;
  * Created by Pierre on 06/09/15.
  */
 public class InterestedMessage extends AbstractMessage implements Message {
-    private final static int MESSAGE_LENGTH = 1;
 
-    public InterestedMessage(byte[] bytes) throws CannotReadMessageException {
-        super(bytes, 1);
+    public InterestedMessage(byte[] payload) throws CannotReadMessageException {
+        super(payload, 0);
     }
 
-    public InterestedMessage() {
-        payload = new byte[MESSAGE_LENGTH];
-        payload[0] = MessageType.INTERESTED.getId();
+    public InterestedMessage() throws CannotReadMessageException {
+
+        super(new byte[0]);
     }
 
     @Override

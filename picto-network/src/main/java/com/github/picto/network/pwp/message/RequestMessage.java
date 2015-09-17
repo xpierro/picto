@@ -9,37 +9,36 @@ import java.util.Arrays;
  * Created by Pierre on 06/09/15.
  */
 public class RequestMessage extends AbstractMessage implements Message {
-    private static final int MESSAGE_LENGTH = 13;
+    private static final int MESSAGE_LENGTH = 12;
 
     private int pieceIndex;
     private int blockOffset;
     private int length;
 
-    public RequestMessage(final byte[] bytes) throws CannotReadMessageException {
-        super(bytes, MESSAGE_LENGTH);
+    public RequestMessage(final byte[] payload) throws CannotReadMessageException {
+        super(payload);
         readPayload();
     }
 
     public RequestMessage(final int pieceIndex, final int blockOffset, final int length) {
+        super();
         this.pieceIndex = pieceIndex;
         this.blockOffset = blockOffset;
         this.length = length;
-
         buildPayload();
     }
 
-    private void buildPayload() {
+    protected void buildPayload() {
         payload = new byte[MESSAGE_LENGTH];
-        payload[0] = MessageType.REQUEST.getId();
-        System.arraycopy(ByteArrayUtils.integerToByteArray(pieceIndex), 0, payload, 1, 4);
-        System.arraycopy(ByteArrayUtils.integerToByteArray(blockOffset), 0, payload, 5, 4);
-        System.arraycopy(ByteArrayUtils.integerToByteArray(length), 0, payload, 9, 4);
+        System.arraycopy(ByteArrayUtils.integerToByteArray(pieceIndex), 0, payload, 0, 4);
+        System.arraycopy(ByteArrayUtils.integerToByteArray(blockOffset), 0, payload, 4, 4);
+        System.arraycopy(ByteArrayUtils.integerToByteArray(length), 0, payload, 8, 4);
     }
 
     private void readPayload() {
-        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 1, 5));
-        blockOffset = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 5, 9));
-        length = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 9, 13));
+        pieceIndex = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 0, 4));
+        blockOffset = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 4, 8));
+        length = ByteArrayUtils.byteArrayToInteger(Arrays.copyOfRange(payload, 8, 12));
     }
 
     @Override

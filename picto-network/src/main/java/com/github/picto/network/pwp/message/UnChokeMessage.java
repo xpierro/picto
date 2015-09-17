@@ -6,15 +6,13 @@ import com.github.picto.network.pwp.exception.CannotReadMessageException;
  * Created by Pierre on 06/09/15.
  */
 public class UnChokeMessage extends AbstractMessage implements Message {
-    private static final int MESSAGE_LENGTH = 1;
 
     public UnChokeMessage(byte[] bytes) throws CannotReadMessageException {
-        super(bytes, 1);
+        super(bytes, 0);
     }
 
-    public UnChokeMessage() {
-        payload = new byte[MESSAGE_LENGTH];
-        payload[0] = MessageType.UNCHOKE.getId();
+    public UnChokeMessage() throws CannotReadMessageException {
+        super(new byte[0]);
     }
 
     @Override

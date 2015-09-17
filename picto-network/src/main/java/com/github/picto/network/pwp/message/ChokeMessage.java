@@ -7,8 +7,8 @@ import com.github.picto.network.pwp.exception.CannotReadMessageException;
  */
 public class ChokeMessage extends AbstractMessage implements Message {
 
-    public ChokeMessage(byte[] bytes) throws CannotReadMessageException {
-        super(bytes, 1);
+    public ChokeMessage(byte[] payload) throws CannotReadMessageException {
+        super(payload, 0);
     }
 
     @Override
