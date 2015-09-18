@@ -2,7 +2,7 @@ rootProject.name = 'picto'
 
 include 'bencode'
 
-include 'protocol'
+include 'picto-protocol'
 
 
 
