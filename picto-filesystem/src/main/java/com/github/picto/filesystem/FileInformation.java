@@ -20,11 +20,7 @@ public class FileInformation {
 
     private int startPieceIndex;
 
-    private int startBlockOffset;
-
     private int endPieceIndex;
-
-    private int endPieceOffset;
 
     public String getFileName() {
         return fileName;
@@ -70,31 +66,24 @@ public class FileInformation {
         return startPieceIndex;
     }
 
+    /**
+     * Can only be set at insertion into the metadata as it depends on the file order.
+     * @param startPieceIndex
+     */
     public void setStartPieceIndex(int startPieceIndex) {
         this.startPieceIndex = startPieceIndex;
-    }
-
-    public int getStartBlockOffset() {
-        return startBlockOffset;
-    }
-
-    public void setStartBlockOffset(int startBlockOffset) {
-        this.startBlockOffset = startBlockOffset;
     }
 
     public int getEndPieceIndex() {
         return endPieceIndex;
     }
 
+    /**
+     * Can only be set at insertion into the metadata as it depends on the file order.
+     * @param endPieceIndex
+     */
     public void setEndPieceIndex(int endPieceIndex) {
         this.endPieceIndex = endPieceIndex;
     }
 
-    public int getEndPieceOffset() {
-        return endPieceOffset;
-    }
-
-    public void setEndPieceOffset(int endPieceOffset) {
-        this.endPieceOffset = endPieceOffset;
-    }
 }

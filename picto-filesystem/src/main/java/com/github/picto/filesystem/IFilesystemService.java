@@ -1,5 +1,6 @@
 package com.github.picto.filesystem;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -7,7 +8,7 @@ import java.util.List;
  * meaning: one client = one metainfo file)
  * Created by Pierre on 18/09/15.
  */
-public interface MetainfoFilesystemManager {
+public interface IFilesystemService {
 
     /**
      * Returns the current metainfo descriptor.
@@ -15,13 +16,24 @@ public interface MetainfoFilesystemManager {
      */
     FilesystemMetainfo getFilesystemMetainfo();
 
+    /**
+     * Validates all pieces and sends event when pieces are validated or invalidated.
+     */
     void validateAllPieces();
 
     void validatePiece(int pieceIndex);
 
     void savePiece(final int pieceIndex, final byte[] pieceContent);
 
+    byte[] loadPiece(int pieceIndex);
+
     List<FileInformation> getAllFileInformations();
+
+    /**
+     * Sets the base path holding all the files of the meta info on the filesystem.
+     * @param path
+     */
+    void setFilesystemPath(Path path);
 
     /**
      * Each time a filesystem event occurs, subscribers will be noticed. Use an underlying Guava EventBus.
