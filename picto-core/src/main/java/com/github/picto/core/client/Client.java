@@ -1,4 +1,4 @@
-package com.github.picto.protocol.client;
+package com.github.picto.core.client;
 
 import com.github.picto.bencode.BEncodeReader;
 import com.github.picto.bencode.exception.CannotReadBencodedException;

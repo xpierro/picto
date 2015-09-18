@@ -12,3 +12,9 @@ include 'picto-util'
 
 include 'picto-network'
 
+include 'picto-filesystem'
+
+include 'picto-j2ee-web'
+
+include 'picto-core'
+
