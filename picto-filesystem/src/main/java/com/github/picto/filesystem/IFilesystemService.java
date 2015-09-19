@@ -14,7 +14,7 @@ public interface IFilesystemService {
      * Returns the current metainfo descriptor.
      * @return
      */
-    FilesystemMetainfo getFilesystemMetainfo();
+    IFilesystemMetainfo getFilesystemMetainfo();
 
     /**
      * Validates all pieces and sends event when pieces are validated or invalidated.

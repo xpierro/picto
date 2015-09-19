@@ -1,9 +1,9 @@
 package com.github.picto.filesystem;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Range;
+
+import java.nio.file.Path;
+import java.util.*;
 
 /**
  * A filesystem meta-info representation.
@@ -21,18 +21,20 @@ public class FilesystemMetainfo implements IFilesystemMetainfo {
 
     private Map<Integer, byte[]> pieceHashes;
 
-    // Files must be ordered in the list.
-    private Map<Integer, List<FileInformation>> filesForPiecesMap;
+    private Path basePath;
 
     private int pieceLength;
     private int pieceCount;
 
     private int cumulativeSize;
 
+    private LinkedHashMap<Range<Integer>, List<FileInformation>> piecesToFileIndexRangeMap;
+
     public FilesystemMetainfo(List<FileInformation> fileInformations) {
         this.fileInformations = fileInformations;
         pieceHashes = new HashMap<>();
-        filesForPiecesMap = new HashMap<>();
+
+        piecesToFileIndexRangeMap = new LinkedHashMap<>();
 
         cumulativeSize = 0;
     }
@@ -89,19 +91,24 @@ public class FilesystemMetainfo implements IFilesystemMetainfo {
 
     private void addToFilesForPiece(FileInformation fileInformation) {
 
-        for (int pieceIndex = fileInformation.getStartPieceIndex(); pieceIndex <= fileInformation.getEndPieceIndex(); pieceIndex++) {
-
-            if (!filesForPiecesMap.containsKey(pieceIndex)) {
-                filesForPiecesMap.put(pieceIndex, new ArrayList<>());
-            }
-            if (!filesForPiecesMap.get(pieceIndex).contains(fileInformation)) {
-                filesForPiecesMap.get(pieceIndex).add(fileInformation);
-            }
+        Range<Integer> range = Range.closed(fileInformation.getStartPieceIndex(), fileInformation.getEndPieceIndex());
+        if (!piecesToFileIndexRangeMap.containsKey(range)) {
+            piecesToFileIndexRangeMap.put(range, new ArrayList<>());
         }
+
+        piecesToFileIndexRangeMap.get(range).add(fileInformation);
     }
 
     public List<FileInformation> getOrderedFilesContained(int pieceIndex) {
-        return filesForPiecesMap.get(pieceIndex);
+        List<FileInformation> files = new ArrayList<>();
+        // We assume the linked hash map provides the key in insertion order (ascending range)
+        for (Range<Integer> range : piecesToFileIndexRangeMap.keySet()) {
+            if (range.contains(pieceIndex)) {
+                files.addAll(piecesToFileIndexRangeMap.get(range));
+            }
+        }
+        return files;
+
     }
 
     /**
@@ -135,5 +142,15 @@ public class FilesystemMetainfo implements IFilesystemMetainfo {
 
     public void setPieceCount(int pieceCount) {
         this.pieceCount = pieceCount;
+    }
+
+    @Override
+    public Path getBasePath() {
+        return basePath;
+    }
+
+    @Override
+    public void setBasePath(Path path) {
+        this.basePath = path;
     }
 }

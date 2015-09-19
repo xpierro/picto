@@ -1,5 +1,6 @@
 package com.github.picto.filesystem;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -19,6 +20,11 @@ public interface IFilesystemMetainfo {
      */
     void addFileInformation(FileInformation fileInformation);
 
+    /**
+     * For large file, implementing with a simple map takes a lot of memory. It is recommended to recalculate each time.
+     * @param pieceIndex
+     * @return
+     */
     List<FileInformation> getOrderedFilesContained(int pieceIndex);
 
     /**
@@ -41,4 +47,8 @@ public interface IFilesystemMetainfo {
     public int getPieceCount();
 
     public void setPieceCount(int pieceCount);
+
+    public Path getBasePath();
+
+    public void setBasePath(Path path);
 }

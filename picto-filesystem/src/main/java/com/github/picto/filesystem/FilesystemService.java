@@ -1,5 +1,7 @@
 package com.github.picto.filesystem;
 
+import com.github.picto.filesystem.event.FilesystemReadyEvent;
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
@@ -13,14 +15,25 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Pierre on 19/09/15.
  */
 public class FilesystemService implements IFilesystemService {
 
+    /**
+     * Size of a block of bytes we want to insert during initialization. It's done to avoid using too much memory,
+     * during file initialzation.
+     */
+    private static final long MAX_BLOCK_SIZE = 32 * 1024;
+
     @Inject
-    private FilesystemMetainfo metainfo;
+    private IFilesystemMetainfo metainfo;
+
+    @Inject
+    private EventBus eventBus;
 
     private ListeningExecutorService executorService;
 
@@ -29,7 +42,7 @@ public class FilesystemService implements IFilesystemService {
     }
 
     @Override
-    public FilesystemMetainfo getFilesystemMetainfo() {
+    public IFilesystemMetainfo getFilesystemMetainfo() {
         return metainfo;
     }
 
@@ -54,7 +67,73 @@ public class FilesystemService implements IFilesystemService {
 
     @Override
     public void initializeFilesystem() {
+        if (metainfo.getBasePath() == null || !Files.isDirectory(metainfo.getBasePath())) {
+            throw new IllegalStateException("The torrent base path isn't defined");
+        }
+        // We need to create, in advance, the whole torrent file system. Doing so is slow for big torrent and must
+        // be done asynchronously.
+        executorService.submit(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                // For each file we need to check if it exists, then allocate it on the filesystem and update the physical
+                // path of the fileinfo.
+                for (FileInformation fileInformation : metainfo.getFileInformations()) {
+                    String abstractRelativePath = fileInformation.getAbstractFilePath();
+                    Path torrentBasePath = metainfo.getBasePath();
 
+                    Path filePhysicalPath = torrentBasePath.resolve(abstractRelativePath);
+                    if (Files.isDirectory(filePhysicalPath)) {
+                        throw new IllegalStateException("A directory with the same path already exists.");
+                    }
+
+                    // If the file already exists but has wrong size we delete it.
+                    if(Files.exists(filePhysicalPath)) {
+                        if (!(Files.size(filePhysicalPath) == fileInformation.getFileSize())) {
+                            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "The file " + filePhysicalPath + " already exists with a wrong size, erasing...");
+                            Files.delete(filePhysicalPath);
+                            initializeFile(filePhysicalPath, fileInformation.getFileSize());
+                        } else {
+                            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "The file " + filePhysicalPath + " already exists, ignoring...");
+                        }
+                    } else {
+                        initializeFile(filePhysicalPath, fileInformation.getFileSize());
+                    }
+                }
+
+                eventBus.post(new FilesystemReadyEvent());
+
+                return null;
+            }
+        });
+    }
+
+    /**
+     * Create the file on the filesystem. Already existing files will be overwritten.
+     * The whole file will be written with zeroes.
+     */
+    void initializeFile(Path filePath, long fileSize) throws IOException {
+        Files.createDirectories(filePath.getParent());
+
+        // We fill the file with zeros
+        try(SeekableByteChannel sbc = Files.newByteChannel(filePath, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+            long sizeWritten = 0;
+
+            while (sizeWritten < fileSize) {
+                int sizeToWrite = (int) Math.min(fileSize - sizeWritten, MAX_BLOCK_SIZE);
+
+                ByteBuffer src = ByteBuffer.allocate(sizeToWrite);
+
+                if(sbc.write(src) != sizeToWrite) {
+                    //TODO: maybe less hardcore exception, a problem could appear.
+                    throw new IllegalStateException("The piece content cannot be written.");
+                }
+                sizeWritten += sizeToWrite;
+            }
+
+        } catch (IOException e) {
+            // TODO: what to do here
+            e.printStackTrace();
+        }
     }
 
     // TODO: make it asynchronous with AsynchronousFileChannel
@@ -167,6 +246,6 @@ public class FilesystemService implements IFilesystemService {
 
     @Override
     public void subscribe(Object subscriber) {
-
+        eventBus.register(subscriber);
     }
 }

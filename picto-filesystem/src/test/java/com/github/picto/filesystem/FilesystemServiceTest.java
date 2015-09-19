@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 import static org.mockito.Matchers.*;
@@ -37,7 +36,7 @@ public class FilesystemServiceTest {
 
     @Test
     public void shouldLoadPiece() {
-        doAnswer(invocation -> null).when(service).readPieceChunck(any(Path.class), anyLong(), anyInt(), any(ByteBuffer.class), any(byte[].class), anyInt());
+        doAnswer(invocation -> null).when(service).readPieceChunck(any(Path.class), anyLong(), anyInt(), any(byte[].class), anyInt());
 
         IFilesystemMetainfo metainfo = service.getFilesystemMetainfo();
         metainfo.setPieceLength(256);
@@ -50,12 +49,12 @@ public class FilesystemServiceTest {
 
         service.loadPiece(0);
 
-        verify(service).readPieceChunck(any(Path.class), eq(0L), eq(230), any(ByteBuffer.class), any(byte[].class), eq(0));
-        verify(service).readPieceChunck(any(Path.class), eq(0L), eq(26), any(ByteBuffer.class), any(byte[].class), eq(230));
+        verify(service).readPieceChunck(any(Path.class), eq(0L), eq(230), any(byte[].class), eq(0));
+        verify(service).readPieceChunck(any(Path.class), eq(0L), eq(26), any(byte[].class), eq(230));
 
         service.loadPiece(1);
-        verify(service).readPieceChunck(any(Path.class), eq(26L), eq(230), any(ByteBuffer.class), any(byte[].class), eq(0));
-        verify(service).readPieceChunck(any(Path.class), eq(0L), eq(26), any(ByteBuffer.class), any(byte[].class), eq(230));
+        verify(service).readPieceChunck(any(Path.class), eq(26L), eq(230), any(byte[].class), eq(0));
+        verify(service).readPieceChunck(any(Path.class), eq(0L), eq(26), any(byte[].class), eq(230));
 
     }
 }
