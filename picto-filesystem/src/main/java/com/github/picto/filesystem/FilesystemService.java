@@ -82,22 +82,26 @@ public class FilesystemService implements IFilesystemService {
             int sizeToRead = (int) Math.min(pieceLength - sizeRead, fileInformation.getFileSize());
 
             ByteBuffer dst = ByteBuffer.allocate(sizeToRead);
-
-            try(SeekableByteChannel sbc = Files.newByteChannel(fileInformation.getFilePath())) {
-                sbc.position(relativeByteOffset);
-                sbc.read(dst);
-                // Now that we have the content:
-                System.arraycopy(dst.array(), 0, pieceContent, (int) sizeRead, sizeToRead);
-                sizeRead += sizeToRead;
-                relativeByteOffset = 0; // For next files
-            } catch (IOException e) {
-                // TODO: what to do here
-                e.printStackTrace();
-            }
+            readPieceChunck(fileInformation.getFilePath(), relativeByteOffset, sizeToRead, dst, pieceContent, (int) sizeRead);
+            sizeRead += sizeToRead;
+            relativeByteOffset = 0; // For next files, we will read from the beginning.
 
         }
 
         return pieceContent;
+    }
+
+    void readPieceChunck(Path filePath, long position, int sizeToRead, ByteBuffer dst, byte[] pieceContent, int pieceContentOffset) {
+        try(SeekableByteChannel sbc = Files.newByteChannel(filePath)) {
+            sbc.position(position);
+            sbc.read(dst);
+            // Now that we have the content:
+            System.arraycopy(dst.array(), 0, pieceContent, pieceContentOffset, sizeToRead);
+
+        } catch (IOException e) {
+            // TODO: what to do here
+            e.printStackTrace();
+        }
     }
 
     @Override
