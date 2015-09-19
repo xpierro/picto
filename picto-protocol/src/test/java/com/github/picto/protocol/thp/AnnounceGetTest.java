@@ -18,8 +18,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,8 +32,7 @@ import static junit.framework.TestCase.assertNotNull;
  */
 public class AnnounceGetTest {
 
-    @Ignore
-    @Test
+    //@Test
     public void shouldBuildRequestFromTorrent() throws CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, HashException, THPRequestException, IOException {
         InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/metainfo/ubuntu.torrent");
         BEncodeableDictionary dictionary = (BEncodeableDictionary) new BEncodeReader(stream).readBencodable();
@@ -79,8 +76,7 @@ public class AnnounceGetTest {
 
     private AtomicBoolean shouldEnd = new AtomicBoolean(false);
 
-    @Ignore
-    @Test
+    //@Test
     public void shouldDoGetRequestWithExecutor() throws HashException, THPRequestException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, InterruptedException {
         /*InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/metainfo/ubuntu.torrent");
         BEncodeableDictionary dictionary = (BEncodeableDictionary) new BEncodeReader(stream).readBencodable();
@@ -148,8 +144,7 @@ public class AnnounceGetTest {
         }*/
     }
 
-    @Ignore
-    @Test
+    //@Test
     public void shouldDoGetRequestWithPeerWire() throws HashException, THPRequestException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, InterruptedException {
 
         /*final TrackerAnnounceResponseModel[] responseModel = {null};
