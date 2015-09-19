@@ -44,7 +44,7 @@ public class AnnounceRequestTest {
 
     @Test
     public void shouldBuildRequestFromMetaInfo() throws CannotReadTokenException, CannotReadBencodedException, CannotUnserializeException, URISyntaxException, URLEncodeException, NoSuchAlgorithmException {
-        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/metainfo/ubuntu.torrent");
+        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/protocol/metainfo/ubuntu.torrent");
         BEncodeableDictionary dictionary = (BEncodeableDictionary) new BEncodeReader(stream).readBencodable();
 
         BEncodeUnserializer<MetaInfo> unserializer = new BEncodeUnserializer<>(dictionary, MetaInfo.class);

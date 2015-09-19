@@ -23,7 +23,8 @@ public class MetaInfoUnserializeTest {
 
     @Test
     public void shouldUnserializeTorrentFile() throws CannotReadTokenException, CannotReadBencodedException, CannotUnserializeException {
-        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/metainfo/ubuntu.torrent");
+        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("com/github/picto/protocol/metainfo/ubuntu.torrent");
+
         BEncodeableDictionary dictionary = (BEncodeableDictionary) new BEncodeReader(stream).readBencodable();
 
         // We have a meta info dictionary, let's transform it into a MetaInfo object
