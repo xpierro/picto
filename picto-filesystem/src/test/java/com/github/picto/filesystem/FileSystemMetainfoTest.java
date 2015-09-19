@@ -7,12 +7,13 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by Pierre on 19/09/15.
  */
-public class FilesystemMetainfoTest {
+public class FilesystemMetaInfoTest {
 
     private FileInformation buildFileInformationWithSize(int size) {
         FileInformation fileInformation = new FileInformation();
         fileInformation.setFileSize(size);
         return fileInformation;
+
     }
 
     private void assertPieceIndexes(FileInformation fileInformation, int expectedBeginIndex, int expectedEndIndex) {
@@ -41,7 +42,7 @@ public class FilesystemMetainfoTest {
             metainfo.addFileInformation(information);
         }
 
-        // Now we assert the pieces indexes
+        // Now we assert the pieces indexes are correct
         assertPieceIndexes(informations[0], 0, 0);
         assertPieceIndexes(informations[1], 0, 0);
         assertPieceIndexes(informations[2], 0, 3);
