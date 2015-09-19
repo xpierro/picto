@@ -21,6 +21,9 @@ public class FilesystemMetainfo {
 
     private Map<Integer, byte[]> pieceHashes;
 
+    // Files must be ordered in the list.
+    private Map<Integer, List<FileInformation>> filesForPiecesMap;
+
     private int pieceLength;
     private int pieceCount;
 
@@ -29,6 +32,7 @@ public class FilesystemMetainfo {
     public FilesystemMetainfo(List<FileInformation> fileInformations) {
         this.fileInformations = fileInformations;
         pieceHashes = new HashMap<>();
+        filesForPiecesMap = new HashMap<>();
 
         cumulativeSize = 0;
     }
@@ -41,7 +45,7 @@ public class FilesystemMetainfo {
      * A map of file names=>file paths. Path are relative to the torrent context.
      * @return
      */
-    List<FileInformation> getFileInformations() {
+    public List<FileInformation> getFileInformations() {
         return fileInformations;
     }
 
@@ -49,7 +53,7 @@ public class FilesystemMetainfo {
      * Adds a file information in the right order. Files in bitorrent ARE ordered and this must stay consistent.
      * @param fileInformation
      */
-    void addFileInformation(FileInformation fileInformation) {
+    public void addFileInformation(FileInformation fileInformation) {
         // We calculate first and last piece index for the newly inserted file
         if (fileInformations.size() == 0) { // We are inserting the first file
             fileInformation.setStartPieceIndex(0);
@@ -72,20 +76,39 @@ public class FilesystemMetainfo {
             fileInformation.setEndPieceIndex(numberOfPiecesNextSize);
         }
 
+        fileInformation.setByteOffset(cumulativeSize);
         fileInformations.add(fileInformation);
+        addToFilesForPiece(fileInformation);
         cumulativeSize += fileInformation.getFileSize();
 
+    }
+
+    private void addToFilesForPiece(FileInformation fileInformation) {
+
+        for (int pieceIndex = fileInformation.getStartPieceIndex(); pieceIndex <= fileInformation.getEndPieceIndex(); pieceIndex++) {
+
+            if (!filesForPiecesMap.containsKey(pieceIndex)) {
+                filesForPiecesMap.put(pieceIndex, new ArrayList<>());
+            }
+            if (!filesForPiecesMap.get(pieceIndex).contains(fileInformation)) {
+                filesForPiecesMap.get(pieceIndex).add(fileInformation);
+            }
+        }
+    }
+
+    public List<FileInformation> getOrderedFilesContained(int pieceIndex) {
+        return filesForPiecesMap.get(pieceIndex);
     }
 
     /**
      * Return the size of torrent pieces in bytes.
      * @return
      */
-    int getPieceLength() {
+    public int getPieceLength() {
         return pieceLength;
     }
 
-    void setPieceLength(int pieceLength) {
+    public void setPieceLength(int pieceLength) {
         this.pieceLength = pieceLength;
     }
 
@@ -94,11 +117,11 @@ public class FilesystemMetainfo {
      * TODO: support MD5 option
      * @return
      */
-    byte[] getPieceHash(int pieceIndex) {
+    public byte[] getPieceHash(int pieceIndex) {
         return this.pieceHashes.get(pieceIndex);
     }
 
-    void setPieceHash(int pieceIndex, byte[] hash) {
+    public void setPieceHash(int pieceIndex, byte[] hash) {
         this.pieceHashes.put(pieceIndex, hash);
     }
 

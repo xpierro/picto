@@ -22,6 +22,8 @@ public class FileInformation {
 
     private int endPieceIndex;
 
+    private long byteOffset;
+
     public String getFileName() {
         return fileName;
     }
@@ -86,4 +88,15 @@ public class FileInformation {
         this.endPieceIndex = endPieceIndex;
     }
 
+    /**
+     * Returns the global byte offset of the start of that file inside the whole virtual bitorrent filesystem.
+     * @return
+     */
+    public long getByteOffset() {
+        return byteOffset;
+    }
+
+    public void setByteOffset(long byteOffset) {
+        this.byteOffset = byteOffset;
+    }
 }

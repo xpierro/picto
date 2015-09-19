@@ -21,7 +21,7 @@ public interface IFilesystemService {
      */
     void validateAllPieces();
 
-    void validatePiece(int pieceIndex);
+    void validatePiece(int pieceIndex, byte[] pieceContent);
 
     void savePiece(final int pieceIndex, final byte[] pieceContent);
 

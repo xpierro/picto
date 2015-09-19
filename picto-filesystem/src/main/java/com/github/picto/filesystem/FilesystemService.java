@@ -4,8 +4,11 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -32,12 +35,12 @@ public class FilesystemService implements IFilesystemService {
     @Override
     public void validateAllPieces() {
         for (int i = 0; i < metainfo.getPieceCount(); i++) {
-            validatePiece(i);
+            validatePiece(i, loadPiece(i));
         }
     }
 
     @Override
-    public void validatePiece(int pieceIndex) {
+    public void validatePiece(int pieceIndex, byte[] pieceContent) {
         final byte[] expectedHash = metainfo.getPieceHash(pieceIndex);
 
         executorService.submit(new Callable<Boolean>() {
@@ -60,19 +63,41 @@ public class FilesystemService implements IFilesystemService {
         // A piece can span multiple files, and we therefore need to find where the first block is, and then parse
         // through all the next files.
 
-        long pieceLength = (long) metainfo.getPieceLength();
+        int pieceLength = metainfo.getPieceLength();
 
         // We first calculate the byte offset from the beginning of the torrent
-        long byteOffset = ((long) pieceIndex) * pieceLength;
+        long byteOffset = (long) pieceIndex * (long) pieceLength;
 
         // We now lookup through the files to find: the byte offset in the first file containing the piece, the list of
         // intermediary files containing the piece and the byte offset (included) ending the piece for the last file.
         // If only one file contains the piece the list will have only one file and the start and end offset will
         // reference position inside it.
-        List<FileInformation> containingFiles = new ArrayList<>();
+        List<FileInformation> containingFiles = metainfo.getOrderedFilesContained(pieceIndex);
+        long relativeByteOffset = byteOffset - containingFiles.get(0).getByteOffset();
+        long sizeRead = 0;
 
+        byte[] pieceContent = new byte[pieceLength];
 
-        return new byte[0];
+        for (FileInformation fileInformation : containingFiles) {
+            int sizeToRead = (int) Math.min(pieceLength - sizeRead, fileInformation.getFileSize());
+
+            ByteBuffer dst = ByteBuffer.allocate(sizeToRead);
+
+            try(SeekableByteChannel sbc = Files.newByteChannel(fileInformation.getFilePath())) {
+                sbc.position(relativeByteOffset);
+                sbc.read(dst);
+                // Now that we have the content:
+                System.arraycopy(dst.array(), 0, pieceContent, (int) sizeRead, sizeToRead);
+                sizeRead += sizeToRead;
+                relativeByteOffset = 0; // For next files
+            } catch (IOException e) {
+                // TODO: what to do here
+                e.printStackTrace();
+            }
+
+        }
+
+        return pieceContent;
     }
 
     @Override
