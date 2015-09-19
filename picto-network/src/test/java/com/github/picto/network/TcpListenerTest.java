@@ -2,7 +2,7 @@ package com.github.picto.network;
 
 import com.github.picto.network.pwp.PeerWire;
 import com.github.picto.network.pwp.TcpListener;
-import jdk.nashorn.internal.ir.annotations.Ignore;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
