@@ -15,7 +15,7 @@ import java.util.Map;
  *
  * Created by Pierre on 18/09/15.
  */
-public class FilesystemMetainfo {
+public class FilesystemMetainfo implements IFilesystemMetainfo {
 
     private List<FileInformation> fileInformations;
 
@@ -54,6 +54,10 @@ public class FilesystemMetainfo {
      * @param fileInformation
      */
     public void addFileInformation(FileInformation fileInformation) {
+        if(pieceLength <= 0) {
+            throw new IllegalStateException("Impossible to have a negative or null piece length.");
+        }
+
         // We calculate first and last piece index for the newly inserted file
         if (fileInformations.size() == 0) { // We are inserting the first file
             fileInformation.setStartPieceIndex(0);

@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by Pierre on 19/09/15.
  */
-public class FileSystemMetainfoTest {
+public class FilesystemMetainfoTest {
 
     private FileInformation buildFileInformationWithSize(int size) {
         FileInformation fileInformation = new FileInformation();
