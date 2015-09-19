@@ -72,7 +72,7 @@ public class FileInformation {
      * Can only be set at insertion into the metadata as it depends on the file order.
      * @param startPieceIndex
      */
-    public void setStartPieceIndex(int startPieceIndex) {
+    void setStartPieceIndex(int startPieceIndex) {
         this.startPieceIndex = startPieceIndex;
     }
 
@@ -84,7 +84,7 @@ public class FileInformation {
      * Can only be set at insertion into the metadata as it depends on the file order.
      * @param endPieceIndex
      */
-    public void setEndPieceIndex(int endPieceIndex) {
+    void setEndPieceIndex(int endPieceIndex) {
         this.endPieceIndex = endPieceIndex;
     }
 
@@ -96,7 +96,7 @@ public class FileInformation {
         return byteOffset;
     }
 
-    public void setByteOffset(long byteOffset) {
+    void setByteOffset(long byteOffset) {
         this.byteOffset = byteOffset;
     }
 }
