@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/xpierro/picto.svg?branch=master)](https://travis-ci.org/xpierro/picto)
 # PicTo - Pico biTorrent client
 
 ## Goal
