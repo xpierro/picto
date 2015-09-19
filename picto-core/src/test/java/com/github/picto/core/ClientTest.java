@@ -19,7 +19,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import jdk.nashorn.internal.ir.annotations.Ignore;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.InputStream;
