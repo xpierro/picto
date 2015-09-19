@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -52,11 +53,41 @@ public class FilesystemService implements IFilesystemService {
     }
 
     @Override
-    public void savePiece(int pieceIndex, byte[] pieceContent) {
+    public void initializeFilesystem() {
 
     }
 
-    // TODO: make it asynchronous
+    // TODO: make it asynchronous with AsynchronousFileChannel
+    @Override
+    public void savePiece(int pieceIndex, byte[] pieceContent) {
+        // We suppose the filesystem has been initialized beforehand, and we need to writer the real bytes on it.
+        // To do that, we first need to get where to write: it works like the piece loading, except a write
+        // operation will be performed.
+        int pieceLength = metainfo.getPieceLength();
+
+        // We first calculate the byte offset from the beginning of the torrent
+        long byteOffset = (long) pieceIndex * (long) pieceLength;
+
+        // We now lookup through the files to find: the byte offset in the first file containing the piece, the list of
+        // intermediary files containing the piece and the byte offset (included) ending the piece for the last file.
+        // If only one file contains the piece the list will have only one file and the start and end offset will
+        // reference position inside it.
+        List<FileInformation> containingFiles = metainfo.getOrderedFilesContained(pieceIndex);
+        long relativeByteOffset = byteOffset - containingFiles.get(0).getByteOffset();
+        long sizeWritten = 0;
+
+        for (FileInformation fileInformation : containingFiles) {
+            int sizeToWrite = (int) Math.min(pieceLength - sizeWritten, fileInformation.getFileSize());
+
+            writePieceChunck(fileInformation.getFilePath(), relativeByteOffset, sizeToWrite, pieceContent, (int) sizeWritten);
+
+            sizeWritten += sizeToWrite;
+            relativeByteOffset = 0; // For next files, we will read from the beginning.
+        }
+
+    }
+
+    // TODO: make it asynchronous with AsynchronousFileChannel
     @Override
     public byte[] loadPiece(int pieceIndex) {
         // Loading a piece from the filesystem is particularly complex.
@@ -81,8 +112,7 @@ public class FilesystemService implements IFilesystemService {
         for (FileInformation fileInformation : containingFiles) {
             int sizeToRead = (int) Math.min(pieceLength - sizeRead, fileInformation.getFileSize());
 
-            ByteBuffer dst = ByteBuffer.allocate(sizeToRead);
-            readPieceChunck(fileInformation.getFilePath(), relativeByteOffset, sizeToRead, dst, pieceContent, (int) sizeRead);
+            readPieceChunck(fileInformation.getFilePath(), relativeByteOffset, sizeToRead, pieceContent, (int) sizeRead);
             sizeRead += sizeToRead;
             relativeByteOffset = 0; // For next files, we will read from the beginning.
 
@@ -91,10 +121,31 @@ public class FilesystemService implements IFilesystemService {
         return pieceContent;
     }
 
-    void readPieceChunck(Path filePath, long position, int sizeToRead, ByteBuffer dst, byte[] pieceContent, int pieceContentOffset) {
+    void writePieceChunck(Path filePath, long filePosition, int sizeToWrite, byte[] pieceContent, int pieceContentOffset) {
+        try(SeekableByteChannel sbc = Files.newByteChannel(filePath, StandardOpenOption.WRITE)) {
+            sbc.position(filePosition);
+
+            ByteBuffer src = ByteBuffer.wrap(pieceContent, pieceContentOffset, sizeToWrite);
+
+            if(sbc.write(src) != sizeToWrite) {
+                //TODO: maybe less hardcore exception, a problem could appear.
+                throw new IllegalStateException("The piece content cannot be written.");
+            }
+
+        } catch (IOException e) {
+            // TODO: what to do here
+            e.printStackTrace();
+        }
+    }
+
+    void readPieceChunck(Path filePath, long filePosition, int sizeToRead, byte[] pieceContent, int pieceContentOffset) {
         try(SeekableByteChannel sbc = Files.newByteChannel(filePath)) {
-            sbc.position(position);
-            sbc.read(dst);
+            sbc.position(filePosition);
+
+            ByteBuffer dst = ByteBuffer.allocate(sizeToRead);
+            if(sbc.read(dst) != sizeToRead) {
+                throw new IllegalStateException("The piece content cannot be read.");
+            }
             // Now that we have the content:
             System.arraycopy(dst.array(), 0, pieceContent, pieceContentOffset, sizeToRead);
 

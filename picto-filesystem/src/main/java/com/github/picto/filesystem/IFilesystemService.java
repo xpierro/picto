@@ -23,6 +23,11 @@ public interface IFilesystemService {
 
     void validatePiece(int pieceIndex, byte[] pieceContent);
 
+    /**
+     * Create all the files on the physical layer if they don't exist yet.
+     */
+    void initializeFilesystem();
+
     void savePiece(final int pieceIndex, final byte[] pieceContent);
 
     byte[] loadPiece(int pieceIndex);
