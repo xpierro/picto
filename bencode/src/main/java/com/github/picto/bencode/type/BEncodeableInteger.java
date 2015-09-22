@@ -11,13 +11,13 @@ import java.io.OutputStream;
  * Created by Pierre on 24/08/15.
  */
 public class BEncodeableInteger implements BEncodeableType {
-    private final int integer;
+    private final long integer;
 
-    public BEncodeableInteger(int integer) {
+    public BEncodeableInteger(long integer) {
         this.integer = integer;
     }
 
-    public int getInteger() {
+    public long getInteger() {
         return integer;
     }
 

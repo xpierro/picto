@@ -86,7 +86,16 @@ public class FilesystemMetainfo implements IFilesystemMetainfo {
         fileInformations.add(fileInformation);
         addToFilesForPiece(fileInformation);
         cumulativeSize += fileInformation.getFileSize();
+    }
 
+    @Override
+    public void addFileInformation(String fileName, String abstractFilePath, long fileSize) {
+        FileInformation fileInformation = new FileInformation();
+        fileInformation.setFileName(fileName);
+        fileInformation.setAbstractFilePath(abstractFilePath);
+        fileInformation.setFileSize(fileSize);
+
+        addFileInformation(fileInformation);
     }
 
     private void addToFilesForPiece(FileInformation fileInformation) {

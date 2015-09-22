@@ -4,6 +4,7 @@ import com.github.picto.bencode.exception.CannotReadBencodedException;
 import com.github.picto.bencode.exception.CannotReadTokenException;
 import com.github.picto.bencode.exception.CannotUnserializeException;
 import com.github.picto.core.client.Client;
+import com.github.picto.module.FilesystemModule;
 import com.github.picto.module.ProtocolModule;
 import com.github.picto.network.pwp.exception.CannotReadMessageException;
 import com.github.picto.network.pwp.message.*;
@@ -21,6 +22,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -47,7 +49,7 @@ public class ClientTest {
     private Collection<Peer> peers;
 
     private void initGuice() {
-        Injector injector = Guice.createInjector(new ProtocolModule());
+        Injector injector = Guice.createInjector(new ProtocolModule(), new FilesystemModule());
         client = injector.getInstance(Client.class);
         eventBus = injector.getInstance(EventBus.class);
     }
@@ -366,6 +368,23 @@ public class ClientTest {
         // Now that the piece has been requested we need to wait for a block message
         lock.await();
         assertTrue(expectedMessageReceived);
+
+    }
+
+    //@Test
+    public void clientShouldInitializeFileSystem() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, CannotReadMessageException {
+        lock = new CountDownLatch(2);
+        initGuice();
+        initEventBus();
+        initTorrentStream();
+        initClient();
+
+        client.loadMetaInfo(torrentStream);
+        client.setBasePath(Paths.get(this.getClass().getResource("").getPath()));
+        client.initFilesystem();
+        while (true) {
+            Thread.sleep(200);
+        }
 
     }
 

@@ -90,7 +90,7 @@ public class BEncodeReader {
      * @throws java.io.IOException
      */
     private BEncodeableInteger readInteger() throws IOException {
-        int result = 0;
+        long result = 0;
         int multiplier = 1;
 
         // First read can determine if integer is actually negative.

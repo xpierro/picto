@@ -7,6 +7,8 @@ import com.github.picto.bencode.exception.CannotUnserializeException;
 import com.github.picto.bencode.serialization.BEncodeUnserializer;
 import com.github.picto.bencode.type.BEncodeableDictionary;
 import com.github.picto.bencode.type.BEncodeableType;
+import com.github.picto.filesystem.FilesystemService;
+import com.github.picto.filesystem.IFilesystemMetainfo;
 import com.github.picto.network.http.GetExecutor;
 import com.github.picto.network.http.event.HttpResponseReceivedEvent;
 import com.github.picto.network.pwp.PeerWire;
@@ -17,6 +19,7 @@ import com.github.picto.protocol.event.MaxConnectionsChangedEvent;
 import com.github.picto.protocol.event.MetaInfoLoadedEvent;
 import com.github.picto.protocol.event.NewConnectedPeerEvent;
 import com.github.picto.protocol.event.PeerListChangedEvent;
+import com.github.picto.protocol.metainfo.model.IMetaInfoFileDescription;
 import com.github.picto.protocol.metainfo.model.MetaInfo;
 import com.github.picto.protocol.pwp.model.Peer;
 import com.github.picto.protocol.thp.exception.THPRequestException;
@@ -36,6 +39,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,6 +63,13 @@ public class Client {
 
     @Inject
     private Provider<Peer> peerProvider;
+
+    @Inject
+    private FilesystemService filesystemService;
+
+    private Path basePath;
+
+    private String fileName;
 
     public static enum PieceStatus {
         // The piece isnt present and hasn't been downloaded at all.
@@ -144,6 +155,14 @@ public class Client {
 
     }
 
+    public void setBasePath(Path basePath) {
+        this.basePath = basePath;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
     /**
      * Loads the meta-info file
      * @param metaInfoSource The inputstream representing an underlying meta-info file.
@@ -162,6 +181,31 @@ public class Client {
         Arrays.fill(piecesStatus, PieceStatus.DO_NOT_HAVE);
 
         fireMetaInfoLoaded();
+    }
+
+    /**
+     * Initialize file system management, create folder structure etc.
+     */
+    public void initFilesystem() {
+        // We first initialize the meta info.
+        IFilesystemMetainfo filesystemMetainfo = filesystemService.getFilesystemMetainfo();
+        filesystemMetainfo.setBasePath(basePath);
+        filesystemMetainfo.setPieceCount(metaInfo.getInformation().getPieceCount());
+        filesystemMetainfo.setPieceLength(metaInfo.getInformation().getPieceLength());
+
+        if (metaInfo.getInformation().isMultifiles()) {
+            for (IMetaInfoFileDescription metaInfoFileDescription : metaInfo.getInformation().getFiles()) {
+                //TODO: file names
+                filesystemMetainfo.addFileInformation(metaInfoFileDescription.getPath(), metaInfoFileDescription.getPath(), metaInfoFileDescription.getLength());
+            }
+        } else {
+            if (fileName == null) {
+                fileName = metaInfo.getInformation().getName();
+            }
+            filesystemMetainfo.addFileInformation(fileName, fileName, metaInfo.getInformation().getLength());
+        }
+
+        filesystemService.initializeFilesystem();
     }
 
     private void fireMetaInfoLoaded() {

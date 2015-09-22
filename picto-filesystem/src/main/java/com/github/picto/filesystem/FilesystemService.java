@@ -100,6 +100,7 @@ public class FilesystemService implements IFilesystemService {
 
                     Path filePhysicalPath = torrentBasePath.resolve(abstractRelativePath);
                     if (Files.isDirectory(filePhysicalPath)) {
+                        // TODO: exceptions thrown here aren't thrown out
                         throw new IllegalStateException("A directory with the same path already exists.");
                     }
 

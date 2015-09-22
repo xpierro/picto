@@ -93,6 +93,8 @@ public class BEncodeUnserializer<T> {
             if (valueEncoded.isPresent()) {
                 BEncodeableInteger bEncodeableInteger = (BEncodeableInteger) valueEncoded.get();
                 if (returnType.equals(int.class) || returnType.equals(Integer.class)) {
+                    setter.invoke(target, (int) bEncodeableInteger.getInteger());
+                } else if (returnType.equals(long.class) || returnType.equals(Long.class)){
                     setter.invoke(target, bEncodeableInteger.getInteger());
                 }
                 //TODO: error check, other types

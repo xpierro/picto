@@ -27,6 +27,10 @@ public class MetaInfoInformation extends AbstractBEncodedDictionary implements I
 
     protected boolean multifile;
 
+    protected String name;
+
+    protected long length;
+
     protected List<IMetaInfoFileDescription> files;
 
     public MetaInfoInformation() {
@@ -87,17 +91,6 @@ public class MetaInfoInformation extends AbstractBEncodedDictionary implements I
         this.privateTracker = privateTracker;
     }
 
-    @BEncodeByteArray(name = "name")
-    @Override
-    public String getRootName() {
-        return rootName;
-    }
-
-    @Override
-    public void setRootName(String rootName) {
-        this.rootName = rootName;
-    }
-
     @Override
     public boolean isMultifiles() {
         return multifile;
@@ -118,5 +111,27 @@ public class MetaInfoInformation extends AbstractBEncodedDictionary implements I
     @Override
     public void setFiles(List<IMetaInfoFileDescription> files) {
         this.files = files;
+    }
+
+    @BEncodeByteArray(name = "name")
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @BEncodeInteger(name = "length")
+    @Override
+    public long getLength() {
+        return length;
+    }
+
+    @Override
+    public void setLength(long length) {
+        this.length = length;
     }
 }

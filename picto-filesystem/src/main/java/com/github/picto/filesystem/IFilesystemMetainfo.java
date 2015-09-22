@@ -20,6 +20,8 @@ public interface IFilesystemMetainfo {
      */
     void addFileInformation(FileInformation fileInformation);
 
+    void addFileInformation(String fileName, String abstractFilePath, long fileSize);
+
     /**
      * For large file, implementing with a simple map takes a lot of memory. It is recommended to recalculate each time.
      * @param pieceIndex

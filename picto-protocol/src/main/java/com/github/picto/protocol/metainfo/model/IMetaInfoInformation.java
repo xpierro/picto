@@ -58,14 +58,6 @@ public interface IMetaInfoInformation extends BEncodedDictionary {
     void setPrivate(final boolean privateTracker);
 
     /**
-     * Informative name of the root of the file structure. Can define a folder or filename.
-     * @return A UTF-8 file name that helps the user decide how to store the files. Purely indicative.
-     */
-    String getRootName();
-
-    void setRootName(final String rootName);
-
-    /**
      * Indicates if the meta info defines a group of files under a folder or a unique file.
      * @return True if the meta info is for multi file storage.
      */
@@ -82,4 +74,15 @@ public interface IMetaInfoInformation extends BEncodedDictionary {
 
     void setFiles(final List<IMetaInfoFileDescription> files);
 
+    /**
+     * Informative name of the root of the file structure. Can define a folder or filename.
+     * @return A UTF-8 file name that helps the user decide how to store the files. Purely indicative.
+     */
+    String getName();
+
+    void setName(String name);
+
+    long getLength();
+
+    void setLength(long length);
 }
