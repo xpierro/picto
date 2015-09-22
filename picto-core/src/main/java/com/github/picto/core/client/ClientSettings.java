@@ -1,5 +1,7 @@
 package com.github.picto.core.client;
 
+import com.github.picto.core.pieceselection.IPieceSelectionStrategy;
+
 import java.io.InputStream;
 import java.nio.file.Path;
 
@@ -13,6 +15,8 @@ public class ClientSettings {
     private InputStream metainfoSource;
 
     private Path basePath;
+
+    private IPieceSelectionStrategy pieceSelectionStrategy;
 
     public static ClientSettings settingsBuilder() {
         return new ClientSettings();
@@ -37,6 +41,11 @@ public class ClientSettings {
         return this;
     }
 
+    public ClientSettings pieceSelectionStrategy(IPieceSelectionStrategy pieceSelectionStrategy) {
+        this.pieceSelectionStrategy = pieceSelectionStrategy;
+        return this;
+    }
+
     public int getMaxConnections() {
         return maxConnections;
     }
@@ -47,5 +56,9 @@ public class ClientSettings {
 
     public Path getBasePath() {
         return basePath;
+    }
+
+    public IPieceSelectionStrategy getPieceSelectionStrategy() {
+        return pieceSelectionStrategy;
     }
 }
