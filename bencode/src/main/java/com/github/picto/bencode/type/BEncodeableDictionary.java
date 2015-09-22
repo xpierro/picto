@@ -5,6 +5,7 @@ import com.github.picto.bencode.exception.CannotWriteBencodedException;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -50,10 +51,10 @@ public class BEncodeableDictionary implements BEncodeableType {
     }
 
     public byte[] getBEncodedBytes() {
-        return bytes;
+        return Arrays.copyOf(bytes, bytes.length);
     }
 
     public void setBEncodedBytes(byte[] bytes) {
-        this.bytes = bytes;
+        this.bytes = Arrays.copyOf(bytes, bytes.length);
     }
 }

@@ -129,8 +129,8 @@ public class Peer {
         return new String(peerId, charset);
     }
 
-    public void setPeerId(byte[] peerId) {
-        this.peerId = peerId;
+    public void setPeerId(final byte[] peerId) {
+        this.peerId = Arrays.copyOf(peerId, peerId.length);
     }
 
     public boolean isChokedByUs() {
@@ -189,18 +189,28 @@ public class Peer {
                 setInterestedInUs(false);
                 break;
             case HANDSHAKE:
+                if (!(message instanceof PwpHandshakeMessage)) {
+                    throw new IllegalStateException("Wrong message instanciation.");
+                }
                 this.peerId = ((PwpHandshakeMessage) message).getPeerId();
                 break;
             case BITFIELD:
-                // TODO: test in a proper way if the message has been received correctly.
+                if (!(message instanceof BitFieldMessage)) {
+                    throw new IllegalStateException("Wrong message instanciation.");
+                }
                 BitFieldMessage bitFieldMessage = (BitFieldMessage) message;
                 havePieces = bitFieldMessage.getBitSet();
 
                 break;
             case HAVE:
+                if (!(message instanceof HaveMessage)) {
+                    throw new IllegalStateException("Wrong message instanciation.");
+                }
                 HaveMessage haveMessage = (HaveMessage) message;
                 havePieces.set(haveMessage.getPieceIndex());
                 break;
+            default:
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Peer ignoring message of type " + message.getType());
 
         }
 

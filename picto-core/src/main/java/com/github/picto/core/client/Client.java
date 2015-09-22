@@ -19,7 +19,6 @@ import com.github.picto.protocol.event.NewConnectedPeerEvent;
 import com.github.picto.protocol.event.PeerListChangedEvent;
 import com.github.picto.protocol.metainfo.model.MetaInfo;
 import com.github.picto.protocol.pwp.model.Peer;
-import com.github.picto.protocol.pwp.model.Piece;
 import com.github.picto.protocol.thp.exception.THPRequestException;
 import com.github.picto.protocol.thp.model.ThpAnnounceEvent;
 import com.github.picto.protocol.thp.model.TrackerAnnounceResponseModel;
@@ -100,7 +99,7 @@ public class Client {
      * Downloading pieces should be flushed to file system as soon as downloaded, while transferring pieces should
      * be pruned when a certain delay has passed since they've been requested last.
      */
-    private Map<Integer, Piece> inMemoryPieces;
+    //private Map<Integer, Piece> inMemoryPieces;
 
     private final Map<InetAddress, Peer> peers;
 

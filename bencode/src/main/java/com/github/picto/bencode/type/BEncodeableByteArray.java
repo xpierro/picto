@@ -5,6 +5,7 @@ import com.github.picto.bencode.exception.CannotWriteBencodedException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -16,7 +17,7 @@ public class BEncodeableByteArray implements BEncodeableType {
     private final byte[] bytes;
 
     public BEncodeableByteArray(final byte[] bytes) {
-        this.bytes = bytes;
+        this.bytes = Arrays.copyOf(bytes, bytes.length);
     }
 
     public BEncodeableByteArray(String utf8String) throws UnsupportedEncodingException {
@@ -24,7 +25,7 @@ public class BEncodeableByteArray implements BEncodeableType {
     }
 
     public byte[] getBytes() {
-        return bytes;
+        return Arrays.copyOf(bytes, bytes.length);
     }
 
     public Optional<String> toUtf8String() {

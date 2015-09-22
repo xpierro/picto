@@ -39,6 +39,7 @@ public class HashStringifier extends DefaultStringifier {
                 // We need HEX
                 result.append('%');
                 ch = (byte) (b & 0xF0); // Strip off high nibble
+                // TODO: this code is seen as a bad shift. Analyse more.
                 ch = (byte) (ch >>> 4); // shift the bits down
                 ch = (byte) (ch & 0x0F);
 

@@ -1,5 +1,7 @@
 package com.github.picto.protocol.thp.model.peerid;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
@@ -19,6 +21,8 @@ public enum StaticPeerId implements PeerId {
      */
     private static final int MAX_LENGTH = 20;
 
+    private final Charset DEFAULT_PEER_ID_CHARSET = StandardCharsets.UTF_8;
+
     private byte[] peerId;
     private String clientName;
     private String clientVersion;
@@ -29,14 +33,14 @@ public enum StaticPeerId implements PeerId {
         }
 
         if (peerId.length() < MAX_LENGTH) {
-            this.peerId = Arrays.copyOf(peerId.getBytes(), MAX_LENGTH);
+            this.peerId = Arrays.copyOf(peerId.getBytes(DEFAULT_PEER_ID_CHARSET), MAX_LENGTH);
 
             Random random = new Random(new Date().getTime());
             for (int i = peerId.length(); i < 20; i++) {
                 this.peerId[i] = (byte) random.nextInt();
             }
         } else {
-            this.peerId = peerId.getBytes();
+            this.peerId = peerId.getBytes(DEFAULT_PEER_ID_CHARSET);
         }
         this.clientName = clientName;
         this.clientVersion = clientVersion;

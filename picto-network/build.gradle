@@ -18,3 +18,14 @@ dependencies {
     compile group: 'org.apache.commons', name:'commons-lang3', version:'3.4'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
+
+apply plugin: 'findbugs'
+
+findbugs {
+    toolVersion = "3.0.1"
+    sourceSets = [sourceSets.main]
+    ignoreFailures = true
+    reportsDir = file("$project.buildDir/findbugsReports")
+    effort = "max"
+    reportLevel = "high"
+}

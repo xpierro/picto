@@ -4,6 +4,7 @@ import com.github.picto.network.pwp.annotation.PwpMessageFragment;
 import com.github.picto.util.ByteArrayUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 /**
  * Required first message sent to a peer.
@@ -32,8 +33,6 @@ public class PwpHandshakeMessage implements Message {
         }
     }
 
-    private MessageType messageType;
-
     private byte pstrLength;
 
     private byte[] pstr;
@@ -60,12 +59,12 @@ public class PwpHandshakeMessage implements Message {
     }
 
     public PwpHandshakeMessage peerId(byte[] peerId) {
-        this.peerId = peerId;
+        this.peerId = Arrays.copyOf(peerId, peerId.length);
         return this;
     }
 
     public PwpHandshakeMessage infoHash(byte[] infoHash) {
-        this.infoHash = infoHash;
+        this.infoHash = Arrays.copyOf(infoHash, infoHash.length);
         return this;
     }
     

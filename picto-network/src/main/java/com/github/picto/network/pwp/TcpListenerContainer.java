@@ -19,7 +19,7 @@ public abstract class TcpListenerContainer {
         TcpListener tcpListener = new TcpListener(port) {
             @Override
             protected void emitWire(final PeerWire peerWire) {
-                emitWire(peerWire);
+                TcpListenerContainer.this.emitWire(peerWire);
             }
         };
         listeners.add(tcpListener);

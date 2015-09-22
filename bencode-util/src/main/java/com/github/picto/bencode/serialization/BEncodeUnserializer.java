@@ -60,9 +60,9 @@ public class BEncodeUnserializer<T> {
     //TODO: generify, will be complex (need callback, lambdas maybe ??)
     private void unserializeByteArray(final T target, final Map<Class<? extends Annotation>, Map<Annotation, Pair<Method, Class<?>>>> setterMap) throws InvocationTargetException, IllegalAccessException {
         Map<Annotation, Pair<Method, Class<?>>> byteArrayMap = setterMap.get(BEncodeByteArray.class);
-        for (Annotation annotation : byteArrayMap.keySet()) {
-            BEncodeByteArray concreteAnnotation = (BEncodeByteArray) annotation;
-            Pair<Method, Class<?>> setterReturnTypePair = byteArrayMap.get(annotation);
+        for (Map.Entry<Annotation, Pair<Method, Class<?>>> entry : byteArrayMap.entrySet()) {
+            BEncodeByteArray concreteAnnotation = (BEncodeByteArray) entry.getKey();
+            Pair<Method, Class<?>> setterReturnTypePair = entry.getValue();
             Class<?> returnType = setterReturnTypePair.getRight();
             Method setter = setterReturnTypePair.getLeft();
 
@@ -82,9 +82,9 @@ public class BEncodeUnserializer<T> {
 
     private void unserializeInteger(final T target, final Map<Class<? extends Annotation>, Map<Annotation, Pair<Method, Class<?>>>> setterMap) throws InvocationTargetException, IllegalAccessException {
         Map<Annotation, Pair<Method, Class<?>>> byteArrayMap = setterMap.get(BEncodeInteger.class);
-        for (Annotation annotation : byteArrayMap.keySet()) {
-            BEncodeInteger concreteAnnotation = (BEncodeInteger) annotation;
-            Pair<Method, Class<?>> setterReturnTypePair = byteArrayMap.get(annotation);
+        for (Map.Entry<Annotation, Pair<Method, Class<?>>> entry : byteArrayMap.entrySet()) {
+            BEncodeInteger concreteAnnotation = (BEncodeInteger) entry.getKey();
+            Pair<Method, Class<?>> setterReturnTypePair = entry.getValue();
             Class<?> returnType = setterReturnTypePair.getRight();
             Method setter = setterReturnTypePair.getLeft();
 
@@ -102,10 +102,10 @@ public class BEncodeUnserializer<T> {
 
     private void unserializeDictionary(final T target, final Map<Class<? extends Annotation>, Map<Annotation, Pair<Method, Class<?>>>> setterMap) throws InvocationTargetException, IllegalAccessException, CannotUnserializeException {
         Map<Annotation, Pair<Method, Class<?>>> byteArrayMap = setterMap.get(BEncodeDictionary.class);
-        for (Annotation annotation : byteArrayMap.keySet()) {
-            BEncodeDictionary concreteAnnotation = (BEncodeDictionary) annotation;
-            Pair<Method, Class<?>> setterReturnTypePair = byteArrayMap.get(annotation);
-            Class<?> returnType = setterReturnTypePair.getRight();
+        for (Map.Entry<Annotation, Pair<Method, Class<?>>> entry : byteArrayMap.entrySet()) {
+            BEncodeDictionary concreteAnnotation = (BEncodeDictionary) entry.getKey();
+            Pair<Method, Class<?>> setterReturnTypePair = entry.getValue();
+            //Class<?> returnType = setterReturnTypePair.getRight();
             Method setter = setterReturnTypePair.getLeft();
 
             String name = concreteAnnotation.name();

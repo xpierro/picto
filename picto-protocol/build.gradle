@@ -17,5 +17,15 @@ dependencies {
     compile project(':picto-util')
     compile project(':picto-network')
     testCompile group: 'junit', name: 'junit', version: '4.11'
+}
 
+apply plugin: 'findbugs'
+
+findbugs {
+    toolVersion = "3.0.1"
+    sourceSets = [sourceSets.main]
+    ignoreFailures = true
+    reportsDir = file("$project.buildDir/findbugsReports")
+    effort = "max"
+    reportLevel = "high"
 }

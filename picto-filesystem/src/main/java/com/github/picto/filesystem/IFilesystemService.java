@@ -1,5 +1,7 @@
 package com.github.picto.filesystem;
 
+import com.github.picto.util.exception.HashException;
+
 import java.nio.file.Path;
 import java.util.List;
 
@@ -19,9 +21,9 @@ public interface IFilesystemService {
     /**
      * Validates all pieces and sends event when pieces are validated or invalidated.
      */
-    void validateAllPieces();
+    void validateAllPieces() throws HashException;
 
-    void validatePiece(int pieceIndex, byte[] pieceContent);
+    void validateAndSavePiece(int pieceIndex, byte[] pieceContent);
 
     /**
      * Create all the files on the physical layer if they don't exist yet.

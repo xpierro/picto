@@ -1,6 +1,9 @@
 package com.github.picto.filesystem;
 
 import com.github.picto.filesystem.event.FilesystemReadyEvent;
+import com.github.picto.filesystem.event.PieceValidationEvent;
+import com.github.picto.util.Hasher;
+import com.github.picto.util.exception.HashException;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -12,6 +15,7 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -47,19 +51,32 @@ public class FilesystemService implements IFilesystemService {
     }
 
     @Override
-    public void validateAllPieces() {
+    public void validateAllPieces() throws HashException {
         for (int i = 0; i < metainfo.getPieceCount(); i++) {
-            validatePiece(i, loadPiece(i));
+            if(validatePiece(i, loadPiece(i))) {
+                eventBus.post(PieceValidationEvent.valid(i));
+            } else {
+                eventBus.post(PieceValidationEvent.invalid(i));
+            }
         }
     }
 
-    @Override
-    public void validatePiece(int pieceIndex, byte[] pieceContent) {
-        final byte[] expectedHash = metainfo.getPieceHash(pieceIndex);
+    /**
+     * Synchronous method validating a piece.
+     * @return True if the piece has the expected Hash
+     */
+    public boolean validatePiece(int pieceIndex, byte[] pieceContent) throws HashException {
+        byte[] expectedPieceHash = metainfo.getPieceHash(pieceIndex);
+        byte[] actualPieceHash = Hasher.sha1(pieceContent);
 
-        executorService.submit(new Callable<Boolean>() {
+        return Arrays.equals(expectedPieceHash, actualPieceHash);
+    }
+
+    @Override
+    public void validateAndSavePiece(int pieceIndex, byte[] pieceContent) {
+        executorService.submit(new Callable<Void>() {
             @Override
-            public Boolean call() throws Exception {
+            public Void call() throws Exception {
                 return null;
             }
         });
