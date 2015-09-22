@@ -19,7 +19,7 @@ import java.util.BitSet;
  */
 public class Piece {
     // 2^14 bytes (16KB) is the mainline default size and will be the size we use.
-    public static final int DEFAULT_SIZE = 16384;
+    public static final int DEFAULT_BLOCK_SIZE = 16384;
 
     // 2^17 bytes (128KB) will be the maximum size before disconnect
     public static final int MAX_SIZE = 131072;
@@ -67,8 +67,8 @@ public class Piece {
     }
 
     private void calculateBlockCount() {
-        // We can have one more block if the size isnt a multiple of DEFAULT_SIZE
-        blockCount = pieceContent.length % DEFAULT_SIZE == 0 ? pieceContent.length / DEFAULT_SIZE : (pieceContent.length / DEFAULT_SIZE) + 1;
+        // We can have one more block if the size isnt a multiple of DEFAULT_BLOCK_SIZE
+        blockCount = pieceContent.length % DEFAULT_BLOCK_SIZE == 0 ? pieceContent.length / DEFAULT_BLOCK_SIZE : (pieceContent.length / DEFAULT_BLOCK_SIZE) + 1;
 
         haveBlock = new BitSet(blockCount);
     }
@@ -84,7 +84,7 @@ public class Piece {
         if (block.length > MAX_SIZE) {
             throw new InvalidBlockSizeException("The block size " + block.length + " is above the maximum authorized (" + MAX_SIZE + ")");
         }
-        if (hasBlock(blockOffset, DEFAULT_SIZE)) {
+        if (hasBlock(blockOffset, DEFAULT_BLOCK_SIZE)) {
             throw new BlockAlreadyDownloadedException("The provided block at offset " + blockOffset + " has already been downloaded for the current piece (" + pieceIndex + ")");
         }
     }
@@ -101,8 +101,8 @@ public class Piece {
         }
 
         // We need to get the start index in our internal representation to start testing
-        final int internalBlockOffset = blockOffset - (blockOffset % DEFAULT_SIZE);
-        final int numberOfInternalBlocks = blockSize % DEFAULT_SIZE == 0 ? blockSize / DEFAULT_SIZE : blockSize / DEFAULT_SIZE + 1;
+        final int internalBlockOffset = blockOffset - (blockOffset % DEFAULT_BLOCK_SIZE);
+        final int numberOfInternalBlocks = blockSize % DEFAULT_BLOCK_SIZE == 0 ? blockSize / DEFAULT_BLOCK_SIZE : blockSize / DEFAULT_BLOCK_SIZE + 1;
 
         for (int i = 0; i < numberOfInternalBlocks; i++) {
             if (!haveBlock.get(internalBlockOffset + i)) {
@@ -145,5 +145,9 @@ public class Piece {
 
     public int getPieceIndex() {
         return pieceIndex;
+    }
+
+    public byte[] getPieceContent() {
+        return pieceContent;
     }
 }

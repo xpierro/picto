@@ -9,19 +9,21 @@ import com.github.picto.bencode.type.BEncodeableDictionary;
 import com.github.picto.bencode.type.BEncodeableType;
 import com.github.picto.filesystem.FilesystemService;
 import com.github.picto.filesystem.IFilesystemMetainfo;
+import com.github.picto.filesystem.event.FilesystemReadyEvent;
 import com.github.picto.network.http.GetExecutor;
 import com.github.picto.network.http.event.HttpResponseReceivedEvent;
 import com.github.picto.network.pwp.PeerWire;
 import com.github.picto.network.pwp.TcpConnecter;
 import com.github.picto.network.pwp.event.NewPeerWireEvent;
+import com.github.picto.network.pwp.message.PieceMessage;
 import com.github.picto.network.pwp.message.PwpHandshakeMessage;
-import com.github.picto.protocol.event.MaxConnectionsChangedEvent;
-import com.github.picto.protocol.event.MetaInfoLoadedEvent;
-import com.github.picto.protocol.event.NewConnectedPeerEvent;
-import com.github.picto.protocol.event.PeerListChangedEvent;
+import com.github.picto.protocol.event.*;
 import com.github.picto.protocol.metainfo.model.IMetaInfoFileDescription;
 import com.github.picto.protocol.metainfo.model.MetaInfo;
+import com.github.picto.protocol.pwp.exception.BlockAlreadyDownloadedException;
+import com.github.picto.protocol.pwp.exception.InvalidBlockSizeException;
 import com.github.picto.protocol.pwp.model.Peer;
+import com.github.picto.protocol.pwp.model.Piece;
 import com.github.picto.protocol.thp.exception.THPRequestException;
 import com.github.picto.protocol.thp.model.ThpAnnounceEvent;
 import com.github.picto.protocol.thp.model.TrackerAnnounceResponseModel;
@@ -51,7 +53,7 @@ import java.util.logging.Logger;
  */
 public class Client {
 
-    private static final int DEFAULT_MAX_CONNECTION = 50;
+    public static final int DEFAULT_MAX_CONNECTION = 50;
 
     private EventBus eventBus;
 
@@ -66,8 +68,6 @@ public class Client {
 
     @Inject
     private FilesystemService filesystemService;
-
-    private Path basePath;
 
     private String fileName;
 
@@ -110,7 +110,7 @@ public class Client {
      * Downloading pieces should be flushed to file system as soon as downloaded, while transferring pieces should
      * be pruned when a certain delay has passed since they've been requested last.
      */
-    //private Map<Integer, Piece> inMemoryPieces;
+    private Map<Integer, Piece> inMemoryPieces;
 
     private final Map<InetAddress, Peer> peers;
 
@@ -120,24 +120,32 @@ public class Client {
     private int leechersNb = 0;
 
     /**
-     * The maximum number of allowed connections. 50 by default.
+     * The number of currently open connections.
      */
-    private int maxConnections;
+    private int openConnections;
 
     //TODO: inject a DateUtil.currentDate for testability
     private Date lastAnnounce = new Date();
+
+    private ClientSettings clientSettings;
 
     @Inject
     public Client(EventBus eventBus) {
         this.peers = new HashMap<>();
         listenPort = Optional.empty();
 
-        maxConnections = DEFAULT_MAX_CONNECTION;
+        openConnections = 0;
 
         peerId = StaticPeerId.DEFAULT;
 
+        inMemoryPieces = new HashMap<>();
+
         this.eventBus = eventBus;
         eventBus.register(this);
+    }
+
+    public void configure(ClientSettings clientSettings) {
+        this.clientSettings = clientSettings;
     }
 
     public MetaInfo getMetaInfo() {
@@ -151,12 +159,12 @@ public class Client {
 
     // Client lifecycle
 
-    public void start() {
-
+    public void start() throws CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException {
+        loadMetaInfo(clientSettings.getMetainfoSource());
     }
 
     public void setBasePath(Path basePath) {
-        this.basePath = basePath;
+        clientSettings.basePath(basePath);
     }
 
     public void setFileName(String fileName) {
@@ -189,7 +197,8 @@ public class Client {
     public void initFilesystem() {
         // We first initialize the meta info.
         IFilesystemMetainfo filesystemMetainfo = filesystemService.getFilesystemMetainfo();
-        filesystemMetainfo.setBasePath(basePath);
+        // TODO: handle base path change
+        filesystemMetainfo.setBasePath(clientSettings.getBasePath());
         filesystemMetainfo.setPieceCount(metaInfo.getInformation().getPieceCount());
         filesystemMetainfo.setPieceLength(metaInfo.getInformation().getPieceLength());
 
@@ -208,8 +217,19 @@ public class Client {
         filesystemService.initializeFilesystem();
     }
 
+    @Subscribe
+    public void handleFilesystemLoaded(FilesystemReadyEvent event) throws THPRequestException, HashException {
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "The file system has been created, torrent is ready to download.");
+        refreshPeerList();
+    }
+
     private void fireMetaInfoLoaded() {
         eventBus.post(new MetaInfoLoadedEvent());
+    }
+
+    @Subscribe
+    public void handleMetaInfoLoaded(MetaInfoLoadedEvent event) throws THPRequestException, HashException {
+        initFilesystem();
     }
 
     public void setupPeerListener() {
@@ -276,6 +296,24 @@ public class Client {
         eventBus.post(new PeerListChangedEvent());
     }
 
+    @Subscribe
+    public void handlePeerListChanged(PeerListChangedEvent event) throws HashException {
+        while (openConnections < clientSettings.getMaxConnections()) {
+            connectNextPeer();
+        }
+    }
+
+    /**
+     * Connects to the next available peer.
+     */
+    public void connectNextPeer() throws HashException {
+        for (Peer peer : getPeers()) {
+            if (!peer.isConnected() && !peer.isConnecting()) {
+                connectToPeer(peer);
+            }
+        }
+    }
+
     /**
      * Change the number of authorized connections for this client.
      * Default is 50.
@@ -285,7 +323,7 @@ public class Client {
         if (maxConnections == 0) {
             throw new IllegalStateException("Cannot connect to 0 peers");
         }
-        this.maxConnections = maxConnections;
+        this.clientSettings.maxConnections(maxConnections);
         fireMaxConnectionsChanged();
     }
 
@@ -295,6 +333,7 @@ public class Client {
 
     public void connectToPeer(final Peer peer) throws HashException {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Attempting to connect to " + peer);
+        openConnections += 1;
         peer.connect();
     }
 
@@ -314,6 +353,31 @@ public class Client {
             peers.put(peerAddress, peer);
         }
         fireNewConnectedPeer(peer);
+    }
+
+    @Subscribe
+    public void handleMessage(PeerMessageReceivedEvent event) throws BlockAlreadyDownloadedException, InvalidBlockSizeException {
+        switch (event.getMessage().getType()) {
+            case PIECE:
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "A piece has been received, saving to memory.");
+                PieceMessage pieceMessage = (PieceMessage) event.getMessage();
+
+                if (!inMemoryPieces.containsKey(pieceMessage.getPieceIndex())) {
+                    inMemoryPieces.put(pieceMessage.getPieceIndex(), new Piece(pieceMessage.getPieceIndex(), metaInfo.getInformation().getPieceLength()));
+                    piecesStatus[pieceMessage.getPieceIndex()] = PieceStatus.DOWNLOADING;
+                }
+                Piece piece = inMemoryPieces.get(pieceMessage.getPieceIndex());
+                piece.insertBlock(pieceMessage.getByteOffset(), pieceMessage.getBlock());
+                if (piece.isPieceComplete()) {
+                    piecesStatus[pieceMessage.getPieceIndex()] = PieceStatus.HAVE;
+                    filesystemService.savePiece(pieceMessage.getPieceIndex(), piece.getPieceContent());
+                }
+                break;
+            case HANDSHAKE:
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, "A peer has connected and is ready for messages.");
+                event.getPeer().setConnected();
+                break;
+        }
     }
 
     private void fireNewConnectedPeer(final Peer peer) throws HashException {

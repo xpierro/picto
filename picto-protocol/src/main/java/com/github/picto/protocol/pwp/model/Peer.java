@@ -41,6 +41,9 @@ public class Peer {
     private boolean chokingUs;
     private boolean interestedInUs;
 
+    private boolean connected;
+    private boolean connecting;
+
     private PeerWire peerWire;
 
     /**
@@ -60,6 +63,8 @@ public class Peer {
         chokingUs = true;
         interestedInUs = false;
         expectedPieceCount = -1;
+        connected = false;
+        connecting = false;
     }
 
     /**
@@ -218,6 +223,7 @@ public class Peer {
     }
 
     public void connect() {
+        setConnecting();
         tcpConnecter.connect(
                 getHost(),
                 getPort()
@@ -236,7 +242,7 @@ public class Peer {
             throw new IllegalStateException("This peer is unavailable for piece requests.");
         }
 
-        RequestMessage requestMessage = new RequestMessage(pieceIndex, blockOffset, Piece.DEFAULT_SIZE);
+        RequestMessage requestMessage = new RequestMessage(pieceIndex, blockOffset, Piece.DEFAULT_BLOCK_SIZE);
         sendMessage(requestMessage);
     }
 
@@ -254,6 +260,22 @@ public class Peer {
     public void interested() throws CannotReadMessageException {
         setInterestingForUs(true);
         sendMessage(new InterestedMessage());
+    }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public void setConnected() {
+        this.connected = true;
+    }
+
+    public boolean isConnecting() {
+        return connecting;
+    }
+
+    public void setConnecting() {
+        this.connecting = true;
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.github.picto.bencode.exception.CannotReadBencodedException;
 import com.github.picto.bencode.exception.CannotReadTokenException;
 import com.github.picto.bencode.exception.CannotUnserializeException;
 import com.github.picto.core.client.Client;
+import com.github.picto.core.client.ClientSettings;
 import com.github.picto.module.FilesystemModule;
 import com.github.picto.module.ProtocolModule;
 import com.github.picto.network.pwp.exception.CannotReadMessageException;
@@ -372,20 +373,24 @@ public class ClientTest {
     }
 
     //@Test
-    public void clientShouldInitializeFileSystem() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, CannotReadMessageException {
+    public void clientShouldStart() throws InterruptedException, THPRequestException, HashException, CannotUnserializeException, CannotReadTokenException, CannotReadBencodedException, CannotReadMessageException {
         lock = new CountDownLatch(2);
         initGuice();
         initEventBus();
         initTorrentStream();
         initClient();
 
-        client.loadMetaInfo(torrentStream);
-        client.setBasePath(Paths.get(this.getClass().getResource("").getPath()));
-        client.initFilesystem();
-        while (true) {
+        client.configure(
+                ClientSettings.settingsBuilder()
+                        .basePath(Paths.get(this.getClass().getResource("").getPath()))
+                        .metainfoSource(torrentStream)
+        );
+
+        client.start();
+
+        while(true) {
             Thread.sleep(200);
         }
-
     }
 
 
